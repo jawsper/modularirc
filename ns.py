@@ -6,6 +6,9 @@ from datetime import datetime
 from dateutil.tz import tzlocal
 import dateutil.parser
 
+class NsApiException(Exception):
+	pass
+
 class ns:
 	username = None
 	password = None
@@ -58,19 +61,17 @@ class ns:
 		conn.close()
 		root = ET.fromstring( data )
 		if root.tag == 'error':
-			raise Exception( 'API error: {0}'.format( root[0].text ) )
+			raise NsApiException( 'API error: {0}'.format( root[0].text ) )
 		return root
 			
 	def _search( self, fromStation, toStation ):
-		fromStation = '+'.join( fromStation.split( ' ' ) )
-		toStation = '+'.join( toStation.split( ' ' ) )
 		try:
 			root = self._apiquery( 'ns-api-treinplanner', { 
 				'previousAdvices': 0, 
 				'fromStation': fromStation,
 				'toStation': toStation
 			})
-		except Exception, e:
+		except NsApiException, e:
 			return [ str( e ) ]
 		
 		#print( '_search( "{0}", "{1}" )'.format( fromStation, toStation ) )
@@ -84,12 +85,14 @@ class ns:
 				overstappen = rm.find( 'AantalOverstappen' ).text
 				response.append( '#{0}: Reistijd {2}; {3} overstappen; vertrekt om {4} (over {1})'.format( i, vertrektijd_delta, reistijd, overstappen, vertrektijd ) )
 				i += 1
+			if len( response ) == 0:
+				return [ 'Geen resultaten...' ]
 			return response
 		raise Exception()
 	def _vertrektijden( self, station ):
 		try:
 			root = self._apiquery( 'ns-api-avt', { 'station': station } )
-		except Exception, e:
+		except NsApiException, e:
 			return [ str(e) ]
 		if root.tag == 'ActueleVertrekTijden':
 			now = datetime.now(tzlocal())
@@ -109,6 +112,8 @@ class ns:
 					i, treinsoort, eindbestemming, vertrektijd, vertrektijd_delta, spoor_str 
 				) )
 				i += 1
+			if len( response ) == 0:
+				return [ 'Geen resultaten...' ]
 			return response
 		raise Exception()
 		
