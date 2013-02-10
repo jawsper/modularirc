@@ -1,3 +1,4 @@
+from __future__ import print_function
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_h, nm_to_uh, irc_lower, ip_numstr_to_quad, ip_quad_to_numstr
 import subprocess
@@ -20,28 +21,28 @@ class MyLovelyIRCBot( SingleServerIRCBot ):
 		self.admin = admin
 
 	def on_nicknameinuse( self, c, e ):
-		print "on_nicknameinuse"
-		c.nick(c.get_nickname() + "_")
+		print( "on_nicknameinuse" )
+		c.nick( c.get_nickname() + "_" )
 
 	def on_welcome( self, c, e ):
-		print "on_welcome"
+		print( "on_welcome" )
 		c.join( self.channel )
 	
 	def on_join( self, c, e ):
-		print "on_join %s, %s" % ( e.target(), e.source() )
+		print( "on_join {0}, {1}".format( e.target(), e.source() ) )
 		#if e.target() != "#" and nm_to_n( e.source() ) == c.get_nickname():
 		#	c.notice( e.target(), "I am alive! Muhahaha!" )
 		
 	def on_disconnect( self, c, e ):
-		print "on_disconnect"
+		print( "on_disconnect" )
 		
 
 	def on_privmsg( self, c, e ):
-		print "on_privmsg"
+		print( "on_privmsg" )
 		self.do_command( e, e.arguments()[0], nm_to_uh( e.source() ) == self.admin )
 
 	def on_pubmsg( self, c, e ):
-		print "on_pubmsg"
+		print( "on_pubmsg" )
 		if e.arguments()[0][0] == '!':
 			self.do_command( e, e.arguments()[0][1:], nm_to_uh( e.source() ) == self.admin, False )
 		a = e.arguments()[0].split(":", 1)
@@ -51,11 +52,11 @@ class MyLovelyIRCBot( SingleServerIRCBot ):
 		return
 
 #	def on_dccmsg( self, c, e ):
-#		print "on_dccmsg"
+#		print( "on_dccmsg" )
 #		c.privmsg("You said: " + e.arguments()[0])
 #
 #	def on_dccchat( self, c, e ):
-#		print "on_dccchat"
+#		print( "on_dccchat" )
 #		if len( e.arguments() ) != 2:
 #			return
 #		args = e.arguments()[1].split()
@@ -78,7 +79,7 @@ class MyLovelyIRCBot( SingleServerIRCBot ):
 	def dodo_command( self, source, target, cmd, args, admin = False, display_error = True ):
 		nick = nm_to_n( source )
 		c = self.connection
-		print "do_command (src: ", source, "; tgt: ", target, "; cmd: ", cmd, "; args: ", args, ")"
+		print( "do_command (src: {0}; tgt: {1}; cmd: {2}; args: {3})".format( source, target, cmd, args ) )
 		if admin:
 			if not self.shutup:
 			#	c.notice( nick, "Hiya boss!" )
@@ -105,6 +106,9 @@ class MyLovelyIRCBot( SingleServerIRCBot ):
 					voiced = chobj.voiced()
 					voiced.sort()
 					c.notice( nick, "Voiced: " + ", ".join( voiced ) )
+				return
+			elif cmd == 'nick':
+				c.nick( args[0] )
 				return
 			elif cmd == "join":
 				for channel in args:

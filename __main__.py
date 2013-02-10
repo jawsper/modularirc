@@ -6,6 +6,9 @@ from MyLovelyIRCBot import MyLovelyIRCBot
 #modules
 import ns, google
 
+#import irclib
+#irclib.DEBUG = 1
+
 class Bot:
 	def __init__( self ):
 		config = ConfigParser.SafeConfigParser()
