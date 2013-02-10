@@ -42,7 +42,8 @@ class ns:
 			'Usage: !ns <command> <arguments>',
 			'Commands:',
 			'help (no arguments): this help text',
-			'plan (<fromStation>,<toStation>): plan route from a to b'
+			'plan (<fromStation>,<toStation>): plan route from a to b',
+			'vtijden [<station>]: departure times (default Enschede)'
 		]
 
 	def _apiquery( self, api_method, args ):
