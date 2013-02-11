@@ -30,21 +30,20 @@ class Bot:
 		self.bot.set_admin( config.get( "main", "admin" ) )
 		self.bot.add_module( ns.ns( config.items( 'ns' ) ) )
 		self.bot.add_module( google.google( config.items( 'google' ) ) )
+		signal.signal( signal.SIGINT, self.sigint_handler )
 
 	def start( self ):
 		print( "Starting botje" )
 		self.bot.start()
-
-botje = None
-
-def signal_handler( signal, frame ):
-	global botje
-	print 'Ctrl+C pressed, shutting down!'
-	botje.bot.die()
-	sys.exit(0)
+	def stop( self ):
+		print( 'Shutting down botje' )
+		self.bot.die()
+	def sigint_handler( self, signal, frame ):
+		print 'Ctrl+C pressed, shutting down!'
+		self.stop()
+		sys.exit(0)
 	
 if __name__ == '__main__':
 	print( "Welcome to botje" )
-	signal.signal( signal.SIGINT, signal_handler )
 	botje = Bot()
 	botje.start()
