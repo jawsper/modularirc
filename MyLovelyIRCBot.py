@@ -1,7 +1,8 @@
 from __future__ import print_function
 from ircbot import SingleServerIRCBot
-from irclib import nm_to_n, nm_to_h, nm_to_uh, irc_lower, ip_numstr_to_quad, ip_quad_to_numstr
+from irclib import nm_to_n, nm_to_uh, irc_lower
 import subprocess
+import os
 
 class MyLovelyIRCBot( SingleServerIRCBot ):
 	modules = []
@@ -93,6 +94,16 @@ class MyLovelyIRCBot( SingleServerIRCBot ):
 			#	c.notice( nick, "Sorry to bother you boss! :(" )
 			#	self.shutup = True
 			#	return
+			elif cmd == 'say':
+				t = args[0]
+				msg = args[1:]
+				c.privmsg( t, ' '.join( msg ) )
+				return
+			elif cmd == 'action':
+				t = args[0]
+				msg = args[1:]
+				c.action( t, ' '.join( msg ) )
+				return				
 			elif cmd == "stats":
 				for chname, chobj in self.channels.items():
 					c.notice( nick, "--- Channel statistics ---" )
@@ -155,10 +166,8 @@ class MyLovelyIRCBot( SingleServerIRCBot ):
 			#else:
 			#	c.notice( nick, "Not understood: " + cmd )
 		#else:
-		handled = False
 		for module in self.modules:
 			if module.handle_cmd( cmd ):
-				handled = True
 #				try:
 				for line in module.handle( cmd, args, nick, admin ):
 					c.notice( target, line )
