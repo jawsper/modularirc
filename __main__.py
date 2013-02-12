@@ -6,7 +6,7 @@ import os, signal, ConfigParser, sys
 from MyLovelyIRCBot import MyLovelyIRCBot
 
 #modules
-import ns, google
+import modules
 
 #import irclib
 #irclib.DEBUG = 1
@@ -30,8 +30,8 @@ class Bot:
 		password = config.get( "main", "password" )
 		self.bot = MyLovelyIRCBot( config.get( "main", "channel" ), config.get( "main", "nickname" ), server, port, password )
 		self.bot.set_admin( config.get( "main", "admin" ) )
-		self.bot.add_module( ns.ns( config.items( 'ns' ) ) )
-		self.bot.add_module( google.google( config.items( 'google' ) ) )
+		for module in modules.getmodules():
+			self.bot.add_module( modules.getmodule( module )( config.items( module ) ) )
 		signal.signal( signal.SIGINT, self.sigint_handler )
 
 	def start( self ):
