@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import os, signal, ConfigParser
+from __future__ import print_function
+
+import os, signal, ConfigParser, sys
 from MyLovelyIRCBot import MyLovelyIRCBot
 
 #modules
@@ -20,7 +22,7 @@ class Bot:
 			try:
 				port = int( s[1] )
 			except ValueError:
-				print "Error: Erroneous port."
+				print( "Error: Erroneous port." )
 				sys.exit(1)
 		else:
 			port = 6667
@@ -39,7 +41,7 @@ class Bot:
 		print( 'Shutting down botje' )
 		self.bot.die()
 	def sigint_handler( self, signal, frame ):
-		print 'Ctrl+C pressed, shutting down!'
+		print( 'Ctrl+C pressed, shutting down!' )
 		self.stop()
 		sys.exit(0)
 	

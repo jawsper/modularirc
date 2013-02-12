@@ -1,3 +1,4 @@
+from __future__ import print_function
 import httplib, urllib
 import xml.etree.ElementTree as ET
 import traceback
@@ -38,7 +39,6 @@ class ns:
 						strarg = 'enschede'
 					return self._vertrektijden( strarg )
 			except:
-				import traceback
 				traceback.print_exc()
 				return [ 'Bot error\'d :(' ]
 		return [

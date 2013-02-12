@@ -1,4 +1,4 @@
-# for google_result
+from __future__ import print_function
 import os, httplib, json, pickle, re
 
 class google:
@@ -15,7 +15,7 @@ class google:
 				self.cx = v
 
 		if not os.path.exists( self.google_cache_file ):
-			with open( self.google_cache_file, 'w' ) as f:
+			with open( self.google_cache_file, 'w' ):
 				pass
 		with open( self.google_cache_file, 'rb' ) as f:
 			try:
