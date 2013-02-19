@@ -30,14 +30,13 @@ class ns:
 				args = args[1:]
 				strarg = ' '.join( args )
 				if subcmd == 'plan':
-					if len( strarg ) == 0 or ',' not in strarg:
+					if len( args ) == 0 or ',' not in args[0]:
 						return [ 'Usage: !ns plan <fromStation>,<toStation>' ]
-					subargs = strarg.split(',')
-					return self._search( subargs[0], subargs[1] )
+					return self.__plan_route( *args[0].split(',') )
 				elif subcmd == 'vtijden':
 					if len( strarg ) == 0:
 						strarg = 'enschede'
-					return self._vertrektijden( strarg )
+					return self.__vertrektijden( strarg )
 			except:
 				traceback.print_exc()
 				return [ 'Bot error\'d :(' ]
@@ -49,11 +48,11 @@ class ns:
 			'vtijden [<station>]: departure times (default Enschede)'
 		]
 
-	def _apiquery( self, api_method, args ):
+	def __apiquery( self, api_method, args ):
 		conn = httplib.HTTPConnection( 'webservices.ns.nl' )
 		conn.request(
 			'GET',
-			'/{0}{1}{2}'.format( api_method, '?' if len( args ) > 0 else '', urllib.urlencode( args ) if len( args ) > 0 else '' ),
+			'/{0}{1}'.format( api_method, '?' + urllib.urlencode( args ) if len( args ) > 0 else '' ),
 			headers = { 'Authorization': 'Basic ' + base64.b64encode( '{0}:{1}'.format( self.username, self.password ) ) }
 		)
 		response = conn.getresponse()
@@ -64,10 +63,10 @@ class ns:
 			raise NsApiException( 'API error: {0}'.format( root[0].text ) )
 		return root
 			
-	def _search( self, fromStation, toStation ):
+	def __plan_route( self, fromStation, toStation ):
 		try:
-			root = self._apiquery( 'ns-api-treinplanner', { 
-				'previousAdvices': 0, 
+			root = self.__apiquery( 'ns-api-treinplanner', {
+				'previousAdvices': 0,
 				'fromStation': fromStation,
 				'toStation': toStation
 			})
@@ -80,18 +79,23 @@ class ns:
 			response = []
 			i = 0
 			for rm in root:
-				( vertrektijd, vertrektijd_delta ) = self._parse_tijd( rm.find( 'ActueleVertrekTijd' ).text, now )
+				( vertrektijd, vertrektijd_delta ) = self.__parse_tijd( rm.find( 'ActueleVertrekTijd' ).text, now )
 				reistijd = rm.find( 'ActueleReisTijd' ).text
 				overstappen = rm.find( 'AantalOverstappen' ).text
-				response.append( '#{0}: Reistijd {2}; {3} overstappen; vertrekt om {4} (over {1})'.format( i, vertrektijd_delta, reistijd, overstappen, vertrektijd ) )
+				response.append( 
+					'#{0}: Reistijd {1}; {2} overstappen; vertrekt om {3} (over {4})'.format( 
+						i, reistijd, overstappen, vertrektijd, vertrektijd_delta
+					)
+				)
 				i += 1
 			if len( response ) == 0:
 				return [ 'Geen resultaten...' ]
 			return response
 		raise Exception()
-	def _vertrektijden( self, station ):
+	
+	def __vertrektijden( self, station ):
 		try:
-			root = self._apiquery( 'ns-api-avt', { 'station': station } )
+			root = self.__apiquery( 'ns-api-avt', { 'station': station } )
 		except NsApiException, e:
 			return [ str(e) ]
 		if root.tag == 'ActueleVertrekTijden':
@@ -101,7 +105,7 @@ class ns:
 			for vt in root:
 				if i > 5:
 					break
-				( vertrektijd, vertrektijd_delta ) = self._parse_tijd( vt.find( 'VertrekTijd' ).text, now )
+				( vertrektijd, vertrektijd_delta ) = self.__parse_tijd( vt.find( 'VertrekTijd' ).text, now )
 				treinsoort = vt.find( 'TreinSoort' ).text
 				eindbestemming = vt.find( 'EindBestemming' ).text
 				spoor = vt.find( 'VertrekSpoor' )
@@ -116,8 +120,8 @@ class ns:
 				return [ 'Geen resultaten...' ]
 			return response
 		raise Exception()
-		
-	def _parse_tijd( self, time_str, now ):
+	
+	def __parse_tijd( self, time_str, now ):
 		tijd_datetime = dateutil.parser.parse( time_str )
 		tijd_delta = tijd_datetime - now
 		minuten = tijd_delta.seconds / 60

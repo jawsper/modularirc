@@ -1,5 +1,6 @@
 from __future__ import print_function
-import os, httplib, json, pickle, re
+import os, json, pickle, re
+import httplib, urllib
 
 class google:
 	google_cache_file = os.path.expanduser( '~/.google_cache' )
@@ -21,19 +22,24 @@ class google:
 			try:
 				self.google_cache = pickle.load( f )
 			except EOFError:
-				pass
+				self.google_cache = {}
 				
 	def handle_cmd( self, cmd ):
 		return self.api_key and self.cx and cmd == 'google'
 		
 	def handle( self, cmd, args, nick, admin ):
-		query = "+".join( args )
+		query = ' '.join( args )
 	
 		if not query in self.google_cache:
-			host = "www.googleapis.com"
-			path = "{0}?cx={1}&key={2}&q={3}".format( "/customsearch/v1", self.cx, self.api_key, query )
-			conn = httplib.HTTPSConnection( host )
-			conn.request( "GET", path )
+			conn = httplib.HTTPSConnection( 'www.googleapis.com' )
+			conn.request(
+				'GET',
+				'/customsearch/v1?' + urllib.urlencode({
+					'cx': self.cx,
+					'key': self.api_key,
+					'q': query
+				})
+			)
 			response = conn.getresponse()
 		
 			self.google_cache[ query ] = json.load( response )
@@ -43,11 +49,11 @@ class google:
 		results = self.google_cache[ query ]
 		if 'items' in results and results['items'] and results['items'][0]:
 			return [
-				"{0}: {1}".format( 
-					results['items'][0]['title'].encode('ascii', 'ignore'), 
+				"{0}: {1}".format(
+					results['items'][0]['title'].encode('ascii', 'ignore'),
 					results['items'][0]['link']
 				),
-				re.sub( r' {2,}', r' ', results['items'][0]['snippet'].encode( 'ascii', 'ignore' ) ),
+				re.sub( ' {2,}', ' ', results['items'][0]['snippet'].encode( 'ascii', 'ignore' ) ),
 				'Meer resultaten: http://www.google.nl/?q={0}'.format( query )
 			]
 		else:
