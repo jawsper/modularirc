@@ -19,18 +19,18 @@ class Bot( SingleServerIRCBot ):
 				sys.exit(1)
 		else:
 			port = 6667
-	
+
 		password = self.config.get( "main", "password" )
-		
+
 		channel = self.config.get( 'main', 'channel' )
 		nickname = self.config.get( 'main', 'nickname' )
-		
+
 		if password != None:
 			SingleServerIRCBot.__init__( self, [( server, port, password )], nickname, nickname )
 		else:
 			SingleServerIRCBot.__init__( self, [( server, port )], nickname, nickname )
 		self.channel = channel
-		self.modules = []
+		self.modules = {}
 		self.admin = self.config.get( 'main', 'admin' )
 		for module in modules.getmodules():
 			self.add_module( module )
@@ -39,15 +39,15 @@ class Bot( SingleServerIRCBot ):
 		#for module in modules.getmodules():
 	#		self.bot.add_module( modules.getmodule( module )( config.items( module ) ) )
 		signal.signal( signal.SIGINT, self.sigint_handler )
-	
+
 	def add_module( self, module ):
-		self.modules.append( modules.getmodule( module )( self.config.items( module ) ) )
-	
+		self.modules[ module ] = modules.getmodule( module )( self.config.items( module ) )
+
 	def sigint_handler( self, signal, frame ):
 		print( 'Ctrl+C pressed, shutting down!' )
 		self.die()
 		sys.exit(0)
-		
+
 	# from old bot
 
 	def on_nicknameinuse( self, c, e ):
@@ -57,10 +57,10 @@ class Bot( SingleServerIRCBot ):
 	def on_welcome( self, c, e ):
 		print( "on_welcome" )
 		c.join( self.channel )
-	
+
 #	def on_join( self, c, e ):
 #		print( "on_join {0}, {1}".format( e.target(), e.source() ) )
-		
+
 #	def on_disconnect( self, c, e ):
 #		print( "on_disconnect" )
 
@@ -81,16 +81,9 @@ class Bot( SingleServerIRCBot ):
 				c.notice( nick, "Goodbye cruel world!" )
 				self.die()
 				return
-			elif cmd == 'say':
-				t = args[0]
-				msg = args[1:]
-				c.privmsg( t, ' '.join( msg ) )
+			elif cmd == 'privmsg' or cmd == 'action':
+				getattr( c, cmd )( args[0], ' '.join( args[1:] ) )
 				return
-			elif cmd == 'action':
-				t = args[0]
-				msg = args[1:]
-				c.action( t, ' '.join( msg ) )
-				return				
 			elif cmd == "stats":
 				for chname, chobj in self.channels.items():
 					c.notice( nick, "--- Channel statistics ---" )
@@ -143,11 +136,11 @@ class Bot( SingleServerIRCBot ):
 					c.notice( nick, "Usage: <+|->o <#<channel>|nicknames>" )
 				return
 			elif cmd == "ut" and len( args ) == 1 and args[0] in ( 'start', 'stop' ):
-				c.notice( nick, "Doing %s to UT" % args[0] )
+				c.notice( nick, 'Doing {0} to UT'.format( args[0] ) )
 				r = subprocess.check_output( [ os.path.expanduser( '~/bin/ut-server' ), args[0] ] )
-				c.notice( nick, "Result: %s" % r )
+				c.notice( nick, 'Result: {0}'.format( r ) )
 				return
-		for module in self.modules:
+		for module_name, module in self.modules.items():
 			if module.handle_cmd( cmd ):
 #				try:
 				for line in module.handle( cmd, args, nick, admin ):
