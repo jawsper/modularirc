@@ -30,18 +30,27 @@ class Bot( SingleServerIRCBot ):
 		else:
 			SingleServerIRCBot.__init__( self, [( server, port )], nickname, nickname )
 		self.channel = channel
-		self.modules = {}
 		self.admin = self.config.get( 'main', 'admin' )
-		for module in modules.getmodules():
-			self.add_module( module )
+		self.__load_modules()
 		#self.bot = MyLovelyIRCBot( config.get( "main", "channel" ), config.get( "main", "nickname" ), server, port, password )
 		#self.bot.set_admin( config.get( "main", "admin" ) )
 		#for module in modules.getmodules():
 	#		self.bot.add_module( modules.getmodule( module )( config.items( module ) ) )
 		signal.signal( signal.SIGINT, self.sigint_handler )
 
-	def add_module( self, module ):
-		self.modules[ module ] = modules.getmodule( module )( self.config.items( module ) )
+	def __load_modules( self, reload = False ):
+		self.modules = {}
+		for module in modules.getmodules():
+			self.__add_module( module, reload )
+		
+	def __add_module( self, module, reload = False ):
+		if reload:
+			modules.reload_module( module )
+		try:
+			cfg = self.config.items( module )
+		except ConfigParser.NoSectionError:
+			cfg = {}
+		self.modules[ module ] = modules.getmodule( module )( cfg )
 
 	def sigint_handler( self, signal, frame ):
 		print( 'Ctrl+C pressed, shutting down!' )
@@ -84,6 +93,8 @@ class Bot( SingleServerIRCBot ):
 			elif cmd == 'privmsg' or cmd == 'action':
 				getattr( c, cmd )( args[0], ' '.join( args[1:] ) )
 				return
+			elif cmd == 'reload_modules':
+				self.__load_modules( reload = True )
 			elif cmd == "stats":
 				for chname, chobj in self.channels.items():
 					c.notice( nick, "--- Channel statistics ---" )
