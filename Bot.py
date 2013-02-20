@@ -30,7 +30,7 @@ class Bot( SingleServerIRCBot ):
 		else:
 			SingleServerIRCBot.__init__( self, [( server, port )], nickname, nickname )
 		self.channel = channel
-		self.admin = self.config.get( 'main', 'admin' )
+		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
 		self.__load_modules()
 		#self.bot = MyLovelyIRCBot( config.get( "main", "channel" ), config.get( "main", "nickname" ), server, port, password )
 		#self.bot.set_admin( config.get( "main", "admin" ) )
@@ -79,7 +79,7 @@ class Bot( SingleServerIRCBot ):
 			return
 		args = message[1:].split()
 		cmd = args.pop(0).strip()
-		admin = nm_to_uh( e.source() ) == self.admin
+		admin = nm_to_uh( e.source() ) in self.admin
 		nick = nm_to_n( e.source() )
 		target = e.target()
 		if not is_channel( target ):
