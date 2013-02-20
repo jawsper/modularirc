@@ -1,2 +1,4 @@
 ircbot
 ======
+Dependencies:
+python-dateutil
