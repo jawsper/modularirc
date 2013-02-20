@@ -37,6 +37,8 @@ class ns:
 					if len( strarg ) == 0:
 						strarg = 'enschede'
 					return self.__vertrektijden( strarg )
+				elif subcmd == 'storing':
+					return self.__storingen( strarg )
 			except:
 				traceback.print_exc()
 				return [ 'Bot error\'d :(' ]
@@ -45,7 +47,8 @@ class ns:
 			'Commands:',
 			'help (no arguments): this help text',
 			'plan (<fromStation>,<toStation>): plan route from a to b',
-			'vtijden [<station>]: departure times (default Enschede)'
+			'vtijden [<station>]: departure times (default Enschede)',
+			'storing [<station>]: storingen (station optioneel)'
 		]
 
 	def __apiquery( self, api_method, args ):
@@ -121,8 +124,30 @@ class ns:
 			return response
 		raise Exception()
 	
-	def __parse_tijd( self, time_str, now ):
+	def __storingen( self, station ):
+		try:
+			root = self.__apiquery( 'ns-api-storingen', station )
+		except NsApiException, e:
+			return [ str(e) ]
+		
+		if root.tag == 'Storingen':
+			response = []
+			#for storing in root.find( 'Ongepland' ):
+			#	pass
+			for storing_type in root:
+				response.append( '{0}:'.format( storing_type.tag ) )
+				for storing in storing_type:
+					traject = storing.find( 'Traject' ).text
+					response.append( '\t{0}'.format(
+						traject
+					) )
+			return response
+		raise Exception()
+	
+	def __parse_tijd( self, time_str, now = None ):
 		tijd_datetime = dateutil.parser.parse( time_str )
+		if not now:
+			return tijd_datetime.strftime( '%H:%M' )
 		tijd_delta = tijd_datetime - now
 		minuten = tijd_delta.seconds / 60
 		uren = minuten / 60
