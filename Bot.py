@@ -86,6 +86,7 @@ class Bot( SingleServerIRCBot ):
 			target = nick
 		print( "__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})".format( nick, target, cmd, args, admin ) )
 		if admin:
+			if cmd == 'say': cmd = 'privmsg'
 			if cmd == "die":
 				c.notice( nick, "Goodbye cruel world!" )
 				self.die()
