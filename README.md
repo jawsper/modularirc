@@ -8,11 +8,11 @@ Config file ~/.ircbot:
 
 <pre>
 [main]
-server=<host>[:<port>]
-[password=<password]
-channel=#<channel>
-nickname=<nickname>
-admin=<admin>([;<other_admin>)*
+server=$host[:$port]
+[password=$password]
+channel=$channel
+nickname=$nickname
+admin=$admin([;$other_admin)*
 </pre>
 
 ======
