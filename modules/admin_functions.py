@@ -32,9 +32,6 @@ class admin_functions( _module ):
 
 
 	# command handlers
-	def __handle_die( self, bot, cmd, args, source, target, admin ):
-		bot.notice( source, 'Goodbye cruel world!' )
-		bot.die()
 
 	# make the bot speak
 	def __handle_say( self, *args ):
@@ -44,6 +41,9 @@ class admin_functions( _module ):
 	def __handle_notice( self, bot, cmd, args, source, target, admin ):
 		bot.notice( args.pop(0), ' '.join( args ) )
 
+	# show loaded modules
+	def __handle_modules( self, bot, cmd, args, source, target, admin ):
+		bot.notice( target, 'Loaded modules: ' + ' '.join( sorted( bot.modules ) ) )
 	# reload all the modules
 	def __handle_reload_modules( self, bot, cmd, args, source, target, admin ):
 		bot.load_modules( reload = True )
