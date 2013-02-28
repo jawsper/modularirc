@@ -138,6 +138,9 @@ class Bot( SingleServerIRCBot ):
 			self.notice( source, 'Goodbye cruel world!' )
 			self.die()
 			return
+			
+		if cmd == 'help':
+			self.privmsg( target, '!help: this help text' )
 
 		for module_name, module in self.modules.items():
 			try:
