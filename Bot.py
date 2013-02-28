@@ -50,11 +50,11 @@ class Bot( SingleServerIRCBot ):
 				self.ircobj.process_once( 0.2 )
 			except select.error, e:
 				pass
-		
+
 	def __reload_config( self ):
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
 		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
-		
+
 	def load_modules( self, reload = False ):
 		"""Find and load all modules.
 		Arguments:
@@ -68,7 +68,7 @@ class Bot( SingleServerIRCBot ):
 				self.__add_module( module, reload )
 			except Exception, e:
 				print( "Failed loading module '{0}': {1}".format( module, e ) )
-		
+
 	def __add_module( self, module, reload = False ):
 		"""Add named module to loaded modules.
 		Arguments:
@@ -110,7 +110,7 @@ class Bot( SingleServerIRCBot ):
 		self.connection.privmsg( target, message )
 	def action( self, target, message ):
 		self.connection.action( target, message )
-		
+
 	def __process_command( self, c, e ):
 		"""Process a message coming from the server."""
 		message = e.arguments()[0]
@@ -123,32 +123,33 @@ class Bot( SingleServerIRCBot ):
 		cmd = args.pop(0).strip()
 		# test for admin
 		admin = nm_to_uh( e.source() ) in self.admin
-		
+
 		# nick is the sender of the message, target is either a channel or the sender.
 		source = nm_to_n( e.source() )
 		target = e.target()
 		if not is_channel( target ):
 			target = source
-		
+
 		# see if there is a module that is willing to handle this, and make it so.
 		print( '__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})'.format( source, target, cmd, args, admin ) )
-		
+
 		# handle die outside of module (in case module is dead :( )
 		if admin and cmd == 'die':
 			self.notice( source, 'Goodbye cruel world!' )
 			self.die()
 			return
-		
+
 		for module_name, module in self.modules.items():
 			try:
+				print( module_name )
 				if module.can_handle( cmd, admin ):
+					print( '{0} can handle {1}'.format( module_name, cmd ) )
 					lines = module.handle( self, cmd, args, source, target, admin )
 					if lines:
 						for line in lines:
 							c.notice( target, line )
 			except Exception, e:
 				print( "Module '{0}' handle error: {1}".format( module_name, e ) )
-			return
 
 	def on_privmsg( self, c, e ):
 		print( "on_privmsg" )
