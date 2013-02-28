@@ -5,6 +5,7 @@ from irclib import nm_to_n, nm_to_uh, is_channel
 import modules
 
 class Bot( SingleServerIRCBot ):
+	"""The main brain of the IRC bot."""
 	def __init__( self ):
 		self.config = ConfigParser.SafeConfigParser()
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
@@ -39,11 +40,20 @@ class Bot( SingleServerIRCBot ):
 		signal.signal( signal.SIGINT, self.sigint_handler )
 
 	def __load_modules( self, reload = False ):
+		"""Find and load all modules.
+		Arguments:
+		reload: force reload of all modules
+		"""
 		self.modules = {}
 		for module in modules.getmodules():
 			self.__add_module( module, reload )
 		
 	def __add_module( self, module, reload = False ):
+		"""Add named module to loaded modules.
+		Arguments:
+		module: the name of the module
+		reload: force reload of the module
+		"""
 		if reload:
 			modules.reload_module( module )
 		try:
@@ -53,13 +63,13 @@ class Bot( SingleServerIRCBot ):
 		self.modules[ module ] = modules.getmodule( module )( cfg )
 
 	def sigint_handler( self, signal, frame ):
+		"""Handle SIGINT to shutdown gracefully with Ctrl+C"""
 		print( 'Ctrl+C pressed, shutting down!' )
 		self.die()
 		sys.exit(0)
 
-	# from old bot
-
 	def on_nicknameinuse( self, c, e ):
+		"""Gets called if the server complains about the name being in use. Tries to set the nick to nick + '_'"""
 		print( "on_nicknameinuse" )
 		c.nick( c.get_nickname() + "_" )
 
@@ -74,20 +84,28 @@ class Bot( SingleServerIRCBot ):
 #		print( "on_disconnect" )
 
 	def __process_command( self, c, e ):
+		"""Process a message coming from the server."""
 		message = e.arguments()[0]
+		# commands have to start with !
 		if message[0] != '!':
 			return
+		# strip the ! off, and split the message
 		args = message[1:].split()
+		# cmd is the first item
 		cmd = args.pop(0).strip()
+		# test for admin
 		admin = nm_to_uh( e.source() ) in self.admin
+		
+		# nick is the sender of the message, target is either a channel or the sender.
 		nick = nm_to_n( e.source() )
 		target = e.target()
 		if not is_channel( target ):
 			target = nick
-		print( "__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})".format( nick, target, cmd, args, admin ) )
+		
+		print( '__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})'.format( nick, target, cmd, args, admin ) )
 		if admin:
 			if cmd == 'say': cmd = 'privmsg'
-			if cmd == "die":
+			if cmd == 'die':
 				c.notice( nick, "Goodbye cruel world!" )
 				self.die()
 				return
@@ -164,13 +182,10 @@ class Bot( SingleServerIRCBot ):
 			c.notice( target, "I do quite enjoy potatoes" )
 		elif cmd == "open" and " ".join( args ) == "the pod bay doors":
 			c.notice( target, "I'm sorry, {0}. I'm afraid I can't do that.".format( nick ) )
-		#elif display_error:
-		#	c.notice( target, "Not understood: " + cmd )
 
 	def on_privmsg( self, c, e ):
 		print( "on_privmsg" )
 		self.__process_command( c, e )
-		#self.do_command( e, e.arguments()[0], nm_to_uh( e.source() ) == self.admin )
 
 	def on_pubmsg( self, c, e ):
 		print( "on_pubmsg" )
