@@ -11,6 +11,7 @@ if __name__ == '__main__':
 		if pid > 0:
 			print( 'Forked into PID {0}'.format( pid ) )
 			sys.exit(0)
+		sys.stdout = open( '/tmp/ircbot.log', 'w' )
 	except OSError as error:
 		print( 'Unable to fork. Error: {0} ({1})'.format( error.errno, error.strerror ) )
 		sys.exit(1)
