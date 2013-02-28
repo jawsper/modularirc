@@ -49,7 +49,7 @@ class google( _module ):
 					results['items'][0]['link']
 				),
 				re.sub( ' {2,}', ' ', results['items'][0]['snippet'].encode( 'ascii', 'ignore' ) ),
-				'Meer resultaten: http://www.google.nl/?q={0}'.format( query )
+				'Meer resultaten: http://www.google.nl/search?q={0}'.format( query )
 			]
 		else:
 			return [ "I'm afraid I can't find that." ]
