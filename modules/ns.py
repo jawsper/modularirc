@@ -18,7 +18,8 @@ class ns( _module ):
 	
 	def handle( self, bot, cmd, args, source, target, admin ):
 		if cmd == 'help':
-			return [ '!ns <command>: search ns (send !ns help for more details)' ]
+			self.bot.privmsg( target, '!ns <command>: search train connections (send !ns help for more details)' )
+			return
 		if len( args ) > 0 and args[0] != 'help':
 			try:
 				subcmd = args[0]

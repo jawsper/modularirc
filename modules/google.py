@@ -24,7 +24,8 @@ class google( _module ):
 		
 	def handle( self, bot, cmd, args, source, target, admin ):
 		if cmd == 'help':
-			return [ '!google <query>: search on google' ]
+			self.bot.privmsg( target, '!google <query>: search on google' )
+			return
 		if admin and cmd == 'google_clear_cache':
 			self.google_cache = {}
 		if cmd == 'google':
