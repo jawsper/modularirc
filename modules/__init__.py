@@ -2,8 +2,8 @@ import pkgutil, os, sys
 
 def getmodules():
 	"""Returns all modules that are found in the current package.
-	Excludes modules starting with '__'"""
-	return [ name for _,name, _ in pkgutil.iter_modules( [ os.path.dirname( __file__ ) ] ) if name[0:2] != '__' ]
+	Excludes modules starting with '_'"""
+	return [ name for _,name, _ in pkgutil.iter_modules( [ os.path.dirname( __file__ ) ] ) if name[0] != '_' ]
 
 def getmodule( module ):
 	"""Import module <module> and return the class.
