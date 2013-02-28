@@ -21,7 +21,10 @@ class Bot( SingleServerIRCBot ):
 		else:
 			port = 6667
 
-		password = self.config.get( "main", "password" )
+		try:
+			password = self.config.get( "main", "password" )
+		except:
+			password = None
 
 		channel = self.config.get( 'main', 'channel' )
 		nickname = self.config.get( 'main', 'nickname' )
