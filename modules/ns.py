@@ -16,7 +16,7 @@ class ns( _module ):
 	def can_handle( self, cmd, admin ):
 		return self.username and self.password and cmd == 'ns'
 	
-	def handle( self, bot, cmd, args, nick, admin ):
+	def handle( self, bot, cmd, args, nick, target, admin ):
 		if len( args ) > 0 and args[0] != 'help':
 			try:
 				subcmd = args[0]

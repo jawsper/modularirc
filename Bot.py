@@ -83,6 +83,13 @@ class Bot( SingleServerIRCBot ):
 #	def on_disconnect( self, c, e ):
 #		print( "on_disconnect" )
 
+	def notice( self, target, message ):
+		self.connection.notice( target, message )
+	def privmsg( self, target, message ):
+		self.connection.privmsg( target, message )
+	def action( self, target, message ):
+		self.connection.action( target, message )
+		
 	def __process_command( self, c, e ):
 		"""Process a message coming from the server."""
 		message = e.arguments()[0]
@@ -172,11 +179,10 @@ class Bot( SingleServerIRCBot ):
 				return
 		for module_name, module in self.modules.items():
 			if module.can_handle( cmd, admin ):
-#				try:
-				for line in module.handle( self, cmd, args, nick, admin ):
-					c.notice( target, line )
-#				except:
-#					c.notice( target, "A module borked..." )
+				lines = module.handle( self, cmd, args, nick, target, admin )
+				if lines:
+					for line in lines:
+						c.notice( target, line )
 				return
 		if cmd == "potato":
 			c.notice( target, "I do quite enjoy potatoes" )
