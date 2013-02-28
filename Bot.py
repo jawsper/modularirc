@@ -141,9 +141,7 @@ class Bot( SingleServerIRCBot ):
 
 		for module_name, module in self.modules.items():
 			try:
-				print( module_name )
-				if module.can_handle( cmd, admin ):
-					print( '{0} can handle {1}'.format( module_name, cmd ) )
+				if cmd == 'help' or module.can_handle( cmd, admin ):
 					lines = module.handle( self, cmd, args, source, target, admin )
 					if lines:
 						for line in lines:
