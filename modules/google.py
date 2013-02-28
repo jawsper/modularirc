@@ -6,9 +6,6 @@ from _module import _module
 class google( _module ):
 	"""Bot module to search on google"""
 	google_cache_file = os.path.expanduser( '~/.google_cache' )
-	google_cache = {}
-	api_key = None
-	cx = None
 	
 	def __init__( self, config, bot ):
 		_module.__init__( self, config, bot )
