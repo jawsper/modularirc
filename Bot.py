@@ -125,13 +125,13 @@ class Bot( SingleServerIRCBot ):
 		admin = nm_to_uh( e.source() ) in self.admin
 		
 		# nick is the sender of the message, target is either a channel or the sender.
-		nick = nm_to_n( e.source() )
+		source = nm_to_n( e.source() )
 		target = e.target()
 		if not is_channel( target ):
-			target = nick
+			target = source
 		
 		# see if there is a module that is willing to handle this, and make it so.
-		print( '__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})'.format( nick, target, cmd, args, admin ) )
+		print( '__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})'.format( source, target, cmd, args, admin ) )
 		
 		# handle die outside of module (in case module is dead :( )
 		if admin and cmd == 'die':
@@ -142,7 +142,7 @@ class Bot( SingleServerIRCBot ):
 		for module_name, module in self.modules.items():
 			try:
 				if module.can_handle( cmd, admin ):
-					lines = module.handle( self, cmd, args, nick, target, admin )
+					lines = module.handle( self, cmd, args, source, target, admin )
 					if lines:
 						for line in lines:
 							c.notice( target, line )
