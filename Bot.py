@@ -34,7 +34,6 @@ class Bot( SingleServerIRCBot ):
 		else:
 			SingleServerIRCBot.__init__( self, [( server, port )], nickname, nickname )
 		self.channel = channel
-		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
 		self.load_modules()
 		#self.bot = MyLovelyIRCBot( config.get( "main", "channel" ), config.get( "main", "nickname" ), server, port, password )
 		#self.bot.set_admin( config.get( "main", "admin" ) )
@@ -54,6 +53,7 @@ class Bot( SingleServerIRCBot ):
 		
 	def __reload_config( self ):
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
+		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
 		
 	def load_modules( self, reload = False ):
 		"""Find and load all modules.
