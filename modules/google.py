@@ -10,8 +10,8 @@ class google( _module ):
 	api_key = None
 	cx = None
 	
-	def __init__( self, config ):
-		_module.__init__( self, config )
+	def __init__( self, config, bot ):
+		_module.__init__( self, config, bot )
 
 		if not os.path.exists( self.google_cache_file ):
 			with open( self.google_cache_file, 'w' ):
