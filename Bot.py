@@ -8,7 +8,7 @@ class Bot( SingleServerIRCBot ):
 	"""The main brain of the IRC bot."""
 	def __init__( self ):
 		self.config = ConfigParser.SafeConfigParser()
-		self.config.read( os.path.expanduser( "~/.ircbot" ) )
+		self.__reload_config()
 
 		s = self.config.get( "main", "server" ).split( ":", 1 )
 		server = s[0]
@@ -39,14 +39,22 @@ class Bot( SingleServerIRCBot ):
 	#		self.bot.add_module( modules.getmodule( module )( config.items( module ) ) )
 		signal.signal( signal.SIGINT, self.sigint_handler )
 
+	def __reload_config( self ):
+		self.config.read( os.path.expanduser( "~/.ircbot" ) )
+		
 	def load_modules( self, reload = False ):
 		"""Find and load all modules.
 		Arguments:
-		reload: force reload of all modules
+		reload: force reload of config and modules
 		"""
+		if reload:
+			self.__reload_config()
 		self.modules = {}
 		for module in modules.getmodules():
-			self.__add_module( module, reload )
+			try:
+				self.__add_module( module, reload )
+			except Exception, e:
+				print( "Failed loading module '{0}': {1}".format( module, e ) )
 		
 	def __add_module( self, module, reload = False ):
 		"""Add named module to loaded modules.
@@ -111,12 +119,22 @@ class Bot( SingleServerIRCBot ):
 		
 		# see if there is a module that is willing to handle this, and make it so.
 		print( '__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})'.format( nick, target, cmd, args, admin ) )
+		
+		# handle die outside of module (in case module is dead :( )
+		if admin and cmd == 'die':
+			self.notice( source, 'Goodbye cruel world!' )
+			self.die()
+			return
+		
 		for module_name, module in self.modules.items():
 			if module.can_handle( cmd, admin ):
-				lines = module.handle( self, cmd, args, nick, target, admin )
-				if lines:
-					for line in lines:
-						c.notice( target, line )
+				try:
+					lines = module.handle( self, cmd, args, nick, target, admin )
+					if lines:
+						for line in lines:
+							c.notice( target, line )
+				except Exception, e:
+					print( "Module '{0}' handle error: {1}".format( module_name, e ) )
 				return
 
 	def on_privmsg( self, c, e ):
