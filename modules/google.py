@@ -1,19 +1,17 @@
 from __future__ import print_function
 import os, json, pickle, re
 import httplib, urllib
+from _module import _module
 
-class google:
+class google( _module ):
+	"""Bot module to search on google"""
 	google_cache_file = os.path.expanduser( '~/.google_cache' )
 	google_cache = {}
 	api_key = None
 	cx = None
 	
 	def __init__( self, config ):
-		for ( k, v ) in config:
-			if k == 'api_key':
-				self.api_key = v
-			elif k == 'cx':
-				self.cx = v
+		_module.__init__( self, config )
 
 		if not os.path.exists( self.google_cache_file ):
 			with open( self.google_cache_file, 'w' ):
@@ -24,10 +22,10 @@ class google:
 			except EOFError:
 				self.google_cache = {}
 				
-	def handle_cmd( self, cmd ):
+	def can_handle( self, cmd, admin ):
 		return self.api_key and self.cx and cmd == 'google'
 		
-	def handle( self, cmd, args, nick, admin ):
+	def handle( self, bot, cmd, args, nick, admin ):
 		query = ' '.join( args )
 	
 		if not query in self.google_cache:

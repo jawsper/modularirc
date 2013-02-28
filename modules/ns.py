@@ -6,24 +6,17 @@ import base64
 from datetime import datetime
 from dateutil.tz import tzlocal
 import dateutil.parser
+from _module import _module
 
 class NsApiException(Exception):
 	pass
 
-class ns:
-	username = None
-	password = None
-	def __init__( self, config ):
-		for ( k, v ) in config:
-			if k == 'username':
-				self.username = v
-			elif k == 'password':
-				self.password = v
-	
-	def handle_cmd( self, cmd ):
+class ns( _module ):
+	"""Bot module to use the NS (Nederlandse Spoorwegen) API"""
+	def can_handle( self, cmd, admin ):
 		return self.username and self.password and cmd == 'ns'
 	
-	def handle( self, cmd, args, nick, admin ):
+	def handle( self, bot, cmd, args, nick, admin ):
 		if len( args ) > 0 and args[0] != 'help':
 			try:
 				subcmd = args[0]

@@ -171,9 +171,9 @@ class Bot( SingleServerIRCBot ):
 				c.notice( nick, 'Result: {0}'.format( r ) )
 				return
 		for module_name, module in self.modules.items():
-			if module.handle_cmd( cmd ):
+			if module.can_handle( cmd, admin ):
 #				try:
-				for line in module.handle( cmd, args, nick, admin ):
+				for line in module.handle( self, cmd, args, nick, admin ):
 					c.notice( target, line )
 #				except:
 #					c.notice( target, "A module borked..." )
