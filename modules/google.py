@@ -25,7 +25,7 @@ class google( _module ):
 	def can_handle( self, cmd, admin ):
 		return self.api_key and self.cx and cmd == 'google'
 		
-	def handle( self, bot, cmd, args, nick, target, admin ):
+	def handle( self, bot, cmd, args, source, target, admin ):
 		query = ' '.join( args )
 	
 		if not query in self.google_cache:

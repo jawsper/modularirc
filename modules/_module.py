@@ -4,5 +4,5 @@ class _module:
 			setattr( self, k, v )
 	def can_handle( self, cmd, admin ):
 		return False
-	def handle( self, bot, cmd, args, nick, target, admin ):
+	def handle( self, bot, cmd, args, source, target, admin ):
 		pass
