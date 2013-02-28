@@ -130,15 +130,15 @@ class Bot( SingleServerIRCBot ):
 			return
 		
 		for module_name, module in self.modules.items():
-			if module.can_handle( cmd, admin ):
-				try:
+			try:
+				if module.can_handle( cmd, admin ):
 					lines = module.handle( self, cmd, args, nick, target, admin )
 					if lines:
 						for line in lines:
 							c.notice( target, line )
-				except Exception, e:
-					print( "Module '{0}' handle error: {1}".format( module_name, e ) )
-				return
+			except Exception, e:
+				print( "Module '{0}' handle error: {1}".format( module_name, e ) )
+			return
 
 	def on_privmsg( self, c, e ):
 		print( "on_privmsg" )
