@@ -21,4 +21,8 @@ if __name__ == '__main__':
 			print( 'Unable to fork. Error: {0} ({1})'.format( error.errno, error.strerror ) )
 			sys.exit(1)
 	botje = Bot()
-	botje.start()
+	while True:
+		botje.start()
+		print( 'Botje died, restarting in 5...' )
+		import time
+		time.sleep( 5 )
