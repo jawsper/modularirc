@@ -44,12 +44,16 @@ class Bot( SingleServerIRCBot ):
 	#override
 	def start( self ):
 		self._connect()
-		import select
-		while True:
+		if not self.connection.connected:
+			print( 'Failed to connect' )
+			return False
+		import socket
+		while self.connection.connected:
 			try:
-				self.ircobj.process_once( 0.2 )
-			except select.error, e:
-				pass
+				self.connection.process_data()
+			except socket.timeout:
+				print( 'Socket timeout' )
+				return False
 
 	def __reload_config( self ):
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
