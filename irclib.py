@@ -429,7 +429,7 @@ class ServerConnection(Connection):
         else:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            self.socket.settimeout( 30 )
+            self.socket.settimeout( 300 )
             self.socket.bind((self.localaddress, self.localport))
             self.socket.connect((self.server, self.port))
             if ssl:

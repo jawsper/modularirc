@@ -1,8 +1,15 @@
 from __future__ import print_function
 import ConfigParser, sys, os, signal, subprocess
+import datetime,time
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_uh, is_channel
+import socket
 import modules
+
+def print( *args ):
+	sys.stdout.write( datetime.datetime.now().strftime( '[%H:%M:%S.%f] ' ) )
+	sys.stdout.write( *args )
+	sys.stdout.write( '\n' )
 
 class Bot( SingleServerIRCBot ):
 	"""The main brain of the IRC bot."""
@@ -44,16 +51,23 @@ class Bot( SingleServerIRCBot ):
 	#override
 	def start( self ):
 		self._connect()
+		
 		if not self.connection.connected:
 			print( 'Failed to connect' )
 			return False
-		import socket
+		
+		self.last_ping = None
+		self.ping_timeout = 3 * 60 # 3 minutes
 		while self.connection.connected:
 			try:
 				self.connection.process_data()
 			except socket.timeout:
 				print( 'Socket timeout' )
 				return False
+			except Exception, e:
+				print( 'Exception: {0}'.format( e ) )
+	def on_ping( self, c, e ):
+		print( 'on_ping' )
 
 	def __reload_config( self ):
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
