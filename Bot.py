@@ -66,8 +66,11 @@ class Bot( SingleServerIRCBot ):
 				return False
 			except Exception, e:
 				print( 'Exception: {0}'.format( e ) )
+	
 	def on_ping( self, c, e ):
 		print( 'on_ping' )
+	def on_namreply( self, c, e ):
+		print( 'on_namreply: {0}'.format( e.arguments() ) )
 
 	def __reload_config( self ):
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
@@ -152,10 +155,14 @@ class Bot( SingleServerIRCBot ):
 		print( '__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})'.format( source, target, cmd, args, admin ) )
 
 		# handle die outside of module (in case module is dead :( )
-		if admin and cmd == 'die':
-			self.notice( source, 'Goodbye cruel world!' )
-			self.die()
-			return
+		if admin:
+			if cmd == 'die':
+				self.notice( source, 'Goodbye cruel world!' )
+				self.die()
+				return
+			elif cmd == 'raw':
+				self.connection.send_raw( ' '.join( args ) )
+				return
 			
 		if cmd == 'help':
 			self.privmsg( target, '!help: this help text' )
