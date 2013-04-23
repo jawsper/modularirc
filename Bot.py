@@ -88,6 +88,12 @@ class Bot( SingleServerIRCBot ):
 		"""
 		if reload:
 			self.__reload_config()
+		if self.modules:
+			for module in self.modules:
+				try:
+					self.modules[module].stop()
+				except Exception as e:
+					print( 'Failed to stop module {0}: {1}'.format( module, e ) )
 		self.modules = {}
 		for module in modules.getmodules():
 			try:
