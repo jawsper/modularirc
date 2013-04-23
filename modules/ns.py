@@ -168,9 +168,9 @@ class ns( _module ):
 				for reisdeel in rm.findall( 'ReisDeel' ):
 					stops = map( lambda x:
 						[
-							x.find( 'Naam' ).text, 
-							self.__parse_tijd( x.find( 'Tijd' ).text ), 
-							x.find( 'Spoor' ).text if x.find( 'Spoor' ) is not None else None
+							self.__parse_tijd( x.find( 'Tijd' ).text ),
+							x.find( 'Naam' ).text,
+							'sp ' + x.find( 'Spoor' ).text if x.find( 'Spoor' ) is not None else None
 						] if x is not None else None, reisdeel.findall( 'ReisStop' ) )
 					a = stops[0]
 					b = stops[-1]
