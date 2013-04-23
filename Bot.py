@@ -14,6 +14,7 @@ def print( *args ):
 class Bot( SingleServerIRCBot ):
 	"""The main brain of the IRC bot."""
 	def __init__( self ):
+		self.modules = {}
 		self.config = ConfigParser.SafeConfigParser()
 		self.__reload_config()
 
