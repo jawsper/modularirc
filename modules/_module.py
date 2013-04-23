@@ -1,4 +1,4 @@
-class _module:
+class _module(object):
 	def __init__( self, config, bot ):
 		self.bot = bot
 		for k, v in config:
