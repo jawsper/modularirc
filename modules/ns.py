@@ -162,18 +162,32 @@ class ns( _module ):
 						i, reistijd, overstappen, vertrektijd, vertrektijd_delta
 					)
 				)
-				overstappen = []
+				reisdelen = []
 				curr = None
+				max_part_len = ( [ 0, 0, 0 ], [ 0, 0, 0 ] )
 				for reisdeel in rm.findall( 'ReisDeel' ):
-					stops = map( lambda x: ( x.find( 'Naam' ).text, x.find( 'Tijd' ).text, x.find( 'Spoor' ).text if x.find( 'Spoor' ) is not None else None ) if x else None, reisdeel.findall( 'ReisStop' ) )
-					first = stops[0]
-					last = stops[-1]
-					fmt = 'spoor {2} in {0}'
+					stops = map( lambda x: [ x.find( 'Naam' ).text, x.find( 'Tijd' ).text, x.find( 'Spoor' ).text if x.find( 'Spoor' ) is not None else None ] if x is not None else None, reisdeel.findall( 'ReisStop' ) )
+					a = stops[0]
+					b = stops[-1]
+					
+					for j in range( 0, 3 ):
+						if len( a[j] ) > max_part_len[0][j]:
+							max_part_len[0][j] = len( a[j] )
+						if len( b[j] ) > max_part_len[1][j]:
+							max_part_len[1][j] = len( b[j] )
+					
+					reisdelen.append( ( a, b ) )
+				print( max_part_len )
+				for ( a, b ) in reisdelen:
+					for j in range( 0, 3 ):
+						a[j] = a[j].ljust( max_part_len[0][j] )
+						b[j] = b[j].ljust( max_part_len[1][j] )
+					fmt = '{0} {2}'
+					a = fmt.format( *a )
+					b = fmt.format( *b )
+					#print( '{0} | {1}'.format( a, b ) )
 					response.append(
-						'     in: '+ fmt.format( *first )
-					)
-					response.append(
-						'    uit: '+ fmt.format( *last )
+						'    * {0} | {1}'.format( a, b )
 					)
 				i += 1
 				if i >= max_results:
