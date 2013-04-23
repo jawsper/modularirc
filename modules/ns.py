@@ -166,7 +166,12 @@ class ns( _module ):
 				curr = None
 				max_part_len = ( [ 0, 0, 0 ], [ 0, 0, 0 ] )
 				for reisdeel in rm.findall( 'ReisDeel' ):
-					stops = map( lambda x: [ x.find( 'Naam' ).text, x.find( 'Tijd' ).text, x.find( 'Spoor' ).text if x.find( 'Spoor' ) is not None else None ] if x is not None else None, reisdeel.findall( 'ReisStop' ) )
+					stops = map( lambda x:
+						[
+							x.find( 'Naam' ).text, 
+							self.__parse_tijd( x.find( 'Tijd' ).text ), 
+							x.find( 'Spoor' ).text if x.find( 'Spoor' ) is not None else None
+						] if x is not None else None, reisdeel.findall( 'ReisStop' ) )
 					a = stops[0]
 					b = stops[-1]
 					
@@ -177,17 +182,16 @@ class ns( _module ):
 							max_part_len[1][j] = len( b[j] )
 					
 					reisdelen.append( ( a, b ) )
-				print( max_part_len )
+				
 				for ( a, b ) in reisdelen:
 					for j in range( 0, 3 ):
 						a[j] = a[j].ljust( max_part_len[0][j] )
 						b[j] = b[j].ljust( max_part_len[1][j] )
-					fmt = '{0} {2}'
+					fmt = '{0}  {1}  {2}'
 					a = fmt.format( *a )
 					b = fmt.format( *b )
-					#print( '{0} | {1}'.format( a, b ) )
 					response.append(
-						'    * {0} | {1}'.format( a, b )
+						'    | In: {0} | Uit: {1} |'.format( a, b )
 					)
 				i += 1
 				if i >= max_results:
