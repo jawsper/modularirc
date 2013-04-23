@@ -117,7 +117,9 @@ class ns( _module ):
 			( code, match ) = self.__get_station_code( search )
 			if code:
 				codes.append( code )
-			args = args[ len( match.split( ' ' ) ) : ]
+				args = args[ len( match.split( ' ' ) ) : ]
+			else:
+				args = args[ 1 : ]
 		
 		if len( codes ) < 2:
 			return [ 'Error: niet genoeg stations opgegeven' ]
@@ -135,6 +137,7 @@ class ns( _module ):
 		try:
 			args = {
 				'previousAdvices': 0,
+				'nextAdvices': 2,
 				'fromStation': fromStation,
 				'toStation': toStation
 			}
@@ -145,21 +148,36 @@ class ns( _module ):
 		except NsApiException, e:
 			return [ str( e ) ]
 		
-		#print( '_search( "{0}", "{1}" )'.format( fromStation, toStation ) )
 		if root.tag == 'ReisMogelijkheden':
 			now = datetime.now(tzlocal())
 			response = []
 			i = 0
+			max_results = 3
 			for rm in root:
 				( vertrektijd, vertrektijd_delta ) = self.__parse_tijd( rm.find( 'ActueleVertrekTijd' ).text, now )
 				reistijd = rm.find( 'ActueleReisTijd' ).text
 				overstappen = rm.find( 'AantalOverstappen' ).text
-				response.append( 
+				response.append(
 					'#{0}: Reistijd {1}; {2} overstappen; vertrekt om {3} (over {4})'.format( 
 						i, reistijd, overstappen, vertrektijd, vertrektijd_delta
 					)
 				)
+				overstappen = []
+				curr = None
+				for reisdeel in rm.findall( 'ReisDeel' ):
+					stops = map( lambda x: ( x.find( 'Naam' ).text, x.find( 'Tijd' ).text, x.find( 'Spoor' ).text if x.find( 'Spoor' ) is not None else None ) if x else None, reisdeel.findall( 'ReisStop' ) )
+					first = stops[0]
+					last = stops[-1]
+					fmt = 'spoor {2} in {0}'
+					response.append(
+						'     in: '+ fmt.format( *first )
+					)
+					response.append(
+						'    uit: '+ fmt.format( *last )
+					)
 				i += 1
+				if i >= max_results:
+					break
 			if len( response ) == 0:
 				return [ 'Geen resultaten...' ]
 			return response
