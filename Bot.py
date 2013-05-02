@@ -14,6 +14,7 @@ def print( *args ):
 class Bot( SingleServerIRCBot ):
 	"""The main brain of the IRC bot."""
 	def __init__( self ):
+		self.modules = {}
 		self.config = ConfigParser.SafeConfigParser()
 		self.__reload_config()
 
@@ -66,12 +67,9 @@ class Bot( SingleServerIRCBot ):
 			except socket.timeout:
 				print( 'Socket timeout' )
 				return False
-			except Exception, e:
+			except Exception as e:
 				print( 'Exception: {0}'.format( e ) )
-	
-	def on_ping( self, c, e ):
-		print( 'on_ping' )
-		
+			
 #	def on_all_raw_messages( self, c, e ):
 #		print( '{0}: {1}'.format( e.eventtype(), e.arguments() ) )
 		
@@ -89,6 +87,16 @@ class Bot( SingleServerIRCBot ):
 		people = e.arguments()[2].split( ' ' )
 		ops = map( lambda p: p[1:], filter( lambda p: p[0] == '@', people ) )
 		self.ops[ chan ] = ops
+	
+	def die(self):
+		if self.modules:
+			for module in self.modules:
+				try:
+					self.modules[module].stop()
+				except Exception as e:
+					print( 'Failed to stop module {0}: {1}'.format( module, e ) )
+			del self.modules
+		SingleServerIRCBot.die(self)
 
 	def __reload_config( self ):
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
@@ -101,6 +109,12 @@ class Bot( SingleServerIRCBot ):
 		"""
 		if reload:
 			self.__reload_config()
+		if self.modules:
+			for module in self.modules:
+				try:
+					self.modules[module].stop()
+				except Exception as e:
+					print( 'Failed to stop module {0}: {1}'.format( module, e ) )
 		self.modules = {}
 		for module in modules.getmodules():
 			try:

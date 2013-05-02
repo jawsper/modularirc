@@ -13,6 +13,13 @@ class NsApiException(Exception):
 
 class ns( _module ):
 	"""Bot module to use the NS (Nederlandse Spoorwegen) API"""
+	def __init__( self, config, bot ):
+		super( ns, self ).__init__( config, bot )
+		try:
+			self.stations = self.__station_list()
+		except Exception as e:
+			print( 'Loading stations failed: {0}'.format( e ) )
+		
 	def can_handle( self, cmd, admin ):
 		return self.username and self.password and cmd == 'ns'
 	
@@ -26,9 +33,7 @@ class ns( _module ):
 				args = args[1:]
 				strarg = ' '.join( args )
 				if subcmd == 'plan':
-					if len( args ) == 0 or ',' not in args[0]:
-						return [ 'Usage: !ns plan <fromStation>,<toStation>' ]
-					return self.__plan_route( *args[0].split(',') )
+					return self.__plan_route( args )
 				elif subcmd == 'vtijden':
 					if len( strarg ) == 0:
 						strarg = 'enschede'
@@ -47,11 +52,11 @@ class ns( _module ):
 			'storing [<station>]: storingen (station optioneel)'
 		]
 
-	def __apiquery( self, api_method, args ):
+	def __apiquery( self, api_method, args = None ):
 		conn = httplib.HTTPConnection( 'webservices.ns.nl' )
 		conn.request(
 			'GET',
-			'/{0}{1}'.format( api_method, '?' + urllib.urlencode( args ) if len( args ) > 0 else '' ),
+			'/{0}{1}'.format( api_method, '?' + urllib.urlencode( args ) if args and len( args ) > 0 else '' ),
 			headers = { 'Authorization': 'Basic ' + base64.b64encode( '{0}:{1}'.format( self.username, self.password ) ) }
 		)
 		response = conn.getresponse()
@@ -61,32 +66,136 @@ class ns( _module ):
 		if root.tag == 'error':
 			raise NsApiException( 'API error: {0}'.format( root[0].text ) )
 		return root
-			
-	def __plan_route( self, fromStation, toStation ):
+	
+	def __station_list( self ):
 		try:
-			root = self.__apiquery( 'ns-api-treinplanner', {
+			root = self.__apiquery( 'ns-api-stations-v2' )
+		except NsApiException as e:
+			return [ str( e ) ]
+		if root.tag == 'Stations':
+			list = {}
+			for station in root:
+				namen = []
+				code = station.find( 'Code' ).text
+				land = station.find( 'Land' ).text
+				for naam in station.find( 'Namen' ):
+					if not naam.text in namen:
+						namen.append( naam.text )
+				for naam in station.find( 'Synoniemen' ):
+					if not naam.text in namen:
+						namen.append( naam.text )
+				list[ code ] = {
+					'land': land,
+					'namen': namen
+				}
+			return list
+		raise Exception
+	
+	def __get_station_code( self, arg ):
+		for code in self.stations:
+			for name in self.stations[ code ]['namen']:
+				if name.lower() in arg:
+					return ( code, name.lower() )
+		return ( False, False )
+	
+	def __make_station_search_args( self, args ):
+		list = []
+		for i in range( 0, len( args ) + 1 ):
+			list.append( ' '.join( args[ :i ] ) )
+		return list
+	
+	def __plan_route( self, args ):
+		print( '__plan_route( {0} )'.format( args ) )
+		fromStation = toStation = viaStation = None
+		
+		args = map( lambda x: x.lower(), args )
+		
+		codes = []
+		
+		while len( args ) > 0:
+			search = self.__make_station_search_args( args )
+			( code, match ) = self.__get_station_code( search )
+			if code:
+				codes.append( code )
+				args = args[ len( match.split( ' ' ) ) : ]
+			else:
+				args = args[ 1 : ]
+		
+		if len( codes ) < 2:
+			return [ 'Error: niet genoeg stations opgegeven' ]
+		
+		fromStation = codes[0]
+		toStation = codes[1]
+		if len( codes ) > 2:
+			viaStation = codes[1]
+			toStation = codes[2]
+		
+		if not ( fromStation and toStation ):
+			return [ 'Error: geen geldige stations opgegeven.' ]
+		if fromStation == toStation and not viaStation:
+			return [ 'Error: fromStation en toStation zijn gelijk en er is geen viaStation' ]
+		try:
+			args = {
 				'previousAdvices': 0,
+				'nextAdvices': 2,
 				'fromStation': fromStation,
 				'toStation': toStation
-			})
+			}
+			if viaStation:
+				args['viaStation'] = viaStation
+			
+			root = self.__apiquery( 'ns-api-treinplanner', args )
 		except NsApiException, e:
 			return [ str( e ) ]
 		
-		#print( '_search( "{0}", "{1}" )'.format( fromStation, toStation ) )
 		if root.tag == 'ReisMogelijkheden':
 			now = datetime.now(tzlocal())
 			response = []
 			i = 0
+			max_results = 3
 			for rm in root:
 				( vertrektijd, vertrektijd_delta ) = self.__parse_tijd( rm.find( 'ActueleVertrekTijd' ).text, now )
 				reistijd = rm.find( 'ActueleReisTijd' ).text
 				overstappen = rm.find( 'AantalOverstappen' ).text
-				response.append( 
+				response.append(
 					'#{0}: Reistijd {1}; {2} overstappen; vertrekt om {3} (over {4})'.format( 
 						i, reistijd, overstappen, vertrektijd, vertrektijd_delta
 					)
 				)
+				reisdelen = []
+				curr = None
+				max_part_len = ( [ 0, 0, 0 ], [ 0, 0, 0 ] )
+				for reisdeel in rm.findall( 'ReisDeel' ):
+					stops = map( lambda x:
+						[
+							self.__parse_tijd( x.find( 'Tijd' ).text ),
+							x.find( 'Naam' ).text,
+							'sp ' + x.find( 'Spoor' ).text if x.find( 'Spoor' ) is not None else None
+						] if x is not None else None, reisdeel.findall( 'ReisStop' ) )
+					a = stops[0]
+					b = stops[-1]
+					
+					for j in range( 0, 3 ):
+						if len( a[j] ) > max_part_len[0][j]:
+							max_part_len[0][j] = len( a[j] )
+						if len( b[j] ) > max_part_len[1][j]:
+							max_part_len[1][j] = len( b[j] )
+					
+					reisdelen.append( ( a, b ) )
+				
+				for ( a, b ) in reisdelen:
+					for j in range( 0, 3 ):
+						a[j] = a[j].ljust( max_part_len[0][j] )
+						b[j] = b[j].ljust( max_part_len[1][j] )
+					fmt = '{0}  {1}  {2}'
+					a = fmt.format( *a )
+					b = fmt.format( *b )
+					response.append(
+						'    | In: {0} | Uit: {1} |'.format( a, b )
+					)
 				i += 1
+				if i >= max_results:
+					break
 			if len( response ) == 0:
 				return [ 'Geen resultaten...' ]
 			return response
@@ -122,7 +231,7 @@ class ns( _module ):
 	
 	def __storingen( self, station ):
 		try:
-			root = self.__apiquery( 'ns-api-storingen', station )
+			root = self.__apiquery( 'ns-api-storingen', { 'station': station } )
 		except NsApiException, e:
 			return [ str(e) ]
 		
@@ -134,9 +243,11 @@ class ns( _module ):
 				response.append( '{0}:'.format( storing_type.tag ) )
 				for storing in storing_type:
 					traject = storing.find( 'Traject' ).text
-					response.append( '\t{0}'.format(
+					response.append( '\t* {0}'.format(
 						traject
 					) )
+				else:
+					response.append( '\t* Geen' )
 			return response
 		raise Exception()
 	
