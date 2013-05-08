@@ -1,4 +1,5 @@
 from _module import _module
+import os, subprocess
 
 class admin_functions( _module ):
 	def __handler( self, cmd ):
@@ -36,7 +37,8 @@ class admin_functions( _module ):
 	# !admin_help handler
 	def __handle_admin_help( self, bot, cmd, args, source, target, admin ):
 		if admin:
-			for msg in ( 
+			for msg in (
+				'!update_source: updates the source of the bot. does not reload the bot or the modules',
 				'!say <target> <message>: make the bot speak',
 				'!notice <target> <message>: make the bot send a notice',
 				'!modules: show loaded modules',
@@ -49,7 +51,11 @@ class admin_functions( _module ):
 				'!-o <args>: make someone not op',
 			):
 				bot.notice( source, msg )
-
+	# handle update git
+	def __handle_update_source( self, bot, cmd, args, source, target, admin ):
+		bot.notice( source, 'Please wait, running git...' )
+		result = subprocess.Popen( [ 'git', 'pull' ], stdout = subprocess.PIPE, cwd = os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) ) ).communicate()[0]
+		bot.notice( source, 'Result: ' + result )
 	# make the bot speak
 	def __handle_say( self, *args ):
 		self.__handle_privmsg( *args )
