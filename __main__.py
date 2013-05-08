@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 import os, sys
-from Bot import Bot
+import Bot
 	
 if __name__ == '__main__':
 	print( "Welcome to botje" )
@@ -20,9 +20,15 @@ if __name__ == '__main__':
 		except OSError as error:
 			print( 'Unable to fork. Error: {0} ({1})'.format( error.errno, error.strerror ) )
 			sys.exit(1)
-	botje = Bot()
+	botje = Bot.Bot()
 	while True:
-		botje.start()
+		try:
+			botje.start()
+		except Bot.BotReloadException:
+			print( 'Force reloading Bot class' )
+			botje = None
+			reload(Bot)
+			botje = Bot.Bot()
 		print( 'Botje died, restarting in 5...' )
 		import time
 		time.sleep( 5 )

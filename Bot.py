@@ -6,6 +6,9 @@ from irclib import nm_to_n, nm_to_uh, is_channel
 import socket
 import modules
 
+class BotReloadException(Exception):
+	pass
+
 def print( *args ):
 	sys.stdout.write( datetime.datetime.now().strftime( '[%H:%M:%S.%f] ' ) )
 	sys.stdout.write( *args )
@@ -68,6 +71,8 @@ class Bot( SingleServerIRCBot ):
 			except socket.timeout:
 				print( 'Socket timeout' )
 				return False
+			except BotReloadException as e:
+				raise e
 			except Exception as e:
 				print( 'Exception: {0}'.format( e ) )
 			
@@ -195,6 +200,8 @@ class Bot( SingleServerIRCBot ):
 				self.notice( source, 'Goodbye cruel world!' )
 				self.die()
 				return
+			elif cmd == 'restart_class':
+				raise BotReloadException
 			elif cmd == 'raw':
 				self.connection.send_raw( ' '.join( args ) )
 				return
