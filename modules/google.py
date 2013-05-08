@@ -57,7 +57,7 @@ class google( _module ):
 						results['items'][0]['link']
 					),
 					re.sub( ' {2,}', ' ', results['items'][0]['snippet'] ),
-					'Meer resultaten: http://www.google.nl/search?q={0}'.format( '+'.join( query ) )
+					'Meer resultaten: http://www.google.nl/search?q={0}'.format( '+'.join( args ) )
 				]
 			else:
 				return [ "I'm afraid I can't find that." ]
