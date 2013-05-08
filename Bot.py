@@ -202,6 +202,34 @@ class Bot( SingleServerIRCBot ):
 				return
 			elif cmd == 'restart_class':
 				raise BotReloadException
+			elif cmd == 'reload_module' and len( args ) > 0:
+				for m in args:
+					if m in self.modules:
+						try:
+							self.__add_module( m, True )
+						except Exception as e:
+							self.notice( source, "Failed loading module '{0}': {1}".format( m, e ) )
+			elif cmd == 'available_modules':
+				a_m = []
+				for module in modules.getmodules():
+					if not module in self.modules:
+						a_m.append( module )
+				self.notice( source, 'Available modules: ' + ', '.join( a_m ) )
+			elif cmd == 'enable_module' and len( args ) > 0:
+				for m in args:
+					if not m in self.modules:
+						try:
+							self.__add_module( m, True )
+						except Exception as e:
+							self.notice( source, "Failed loading module '{0}': {1}".format( m, e ) )
+			elif cmd == 'disable_module' and len( args ) > 0:
+				for m in args:
+					if m in self.modules:
+						try:
+							self.modules[ m ].stop()
+						except:
+							pass
+						del self.modules[ m ]
 			elif cmd == 'raw':
 				self.connection.send_raw( ' '.join( args ) )
 				return
@@ -217,9 +245,13 @@ class Bot( SingleServerIRCBot ):
 		if cmd == 'help':
 			self.privmsg( target, '!help: this help text' )
 		elif admin and cmd == 'admin_help':
-			self.notice( source, '!die: kill the bot' )
-			self.notice( source, '!raw: send raw irc command' )
-			self.notice( source, '!admins: see who are admin' )
+			self.notice( source, '!die:                                   kill the bot' )
+			self.notice( source, '!raw:                                   send raw irc command' )
+			self.notice( source, '!admins:                                see who are admin' )
+			self.notice( source, '!restart_class:                         restart the main Bot class' )
+			self.notice( source, '!available_modules:                     see modules that are not currently loaded' )
+			self.notice( source, '!enable_module <module>[ <module>...]:  enable one or more modules' )
+			self.notice( source, '!disable_module <module>[ <module>...]: disable one or more modules' )
 
 		for module_name, module in self.modules.items():
 			try:
