@@ -9,6 +9,8 @@ class admin_functions( _module ):
 		return admin and hasattr( self, self.__handler( cmd ) ) or cmd in ( '+o', '-o' )
 
 	def handle( self, bot, cmd, args, source, target, admin ):
+		if not admin:
+			return
 		if hasattr( self, self.__handler( cmd ) ):
 			getattr( self, self.__handler( cmd ) )( bot, cmd, args, source, target, admin )
 		if cmd in ( '+o', '-o' ):
