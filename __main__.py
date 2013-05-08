@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+
+# MAKE IT UNICODE OK
+import sys
+reload( sys )
+sys.setdefaultencoding( 'utf-8' )
+
 import os, sys
 import Bot
 	

@@ -53,11 +53,11 @@ class google( _module ):
 			if 'items' in results and results['items'] and results['items'][0]:
 				return [
 					"{0}: {1}".format(
-						results['items'][0]['title'].encode('ascii', 'ignore'),
+						results['items'][0]['title'],
 						results['items'][0]['link']
 					),
-					re.sub( ' {2,}', ' ', results['items'][0]['snippet'].encode( 'ascii', 'ignore' ) ),
-					'Meer resultaten: http://www.google.nl/search?q={0}'.format( query )
+					re.sub( ' {2,}', ' ', results['items'][0]['snippet'] ),
+					'Meer resultaten: http://www.google.nl/search?q={0}'.format( '+'.join( query ) )
 				]
 			else:
 				return [ "I'm afraid I can't find that." ]
