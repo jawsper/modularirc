@@ -48,7 +48,7 @@ class admin_functions( _module ):
 				'!+o <args>: make someone op',
 				'!-o <args>: make someone not op',
 			):
-				bot.notice( source, ' + ' + msg )
+				bot.notice( source, msg )
 
 	# make the bot speak
 	def __handle_say( self, *args ):
