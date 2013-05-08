@@ -15,11 +15,11 @@ class Bot( SingleServerIRCBot ):
 	"""The main brain of the IRC bot."""
 	def __init__( self ):
 		self.modules = {}
+		self.admin_channels = []
 		self.config = ConfigParser.SafeConfigParser()
 		self.__reload_config()
 
 		self.channel_ops = {}
-		self.admin_channels = []
 		
 		s = self.config.get( "main", "server" ).split( ":", 1 )
 		server = s[0]
