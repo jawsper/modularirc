@@ -206,6 +206,9 @@ class Bot( SingleServerIRCBot ):
 		
 		if cmd == 'help':
 			self.privmsg( target, '!help: this help text' )
+		elif cmd == 'admin_help':
+			self.notice( source, '!die: kill the bot' )
+			self.notice( source, '!raw: send raw irc command' )
 
 		for module_name, module in self.modules.items():
 			try:

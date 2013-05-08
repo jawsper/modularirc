@@ -32,6 +32,23 @@ class admin_functions( _module ):
 
 
 	# command handlers
+	
+	# !admin_help handler
+	def __handle_admin_help( self, bot, cmd, args, source, target, admin ):
+		if admin:
+			for msg in ( 
+				'!say <target> <message>: make the bot speak',
+				'!notice <target> <message>: make the bot send a notice',
+				'!modules: show loaded modules',
+				'!reload_modules: reload modules',
+				'!stats: show statistics',
+				'!nick <nick>: change the nick',
+				'!join <channel>[ <channel>...]: join a channel',
+				'!part [<channel>]: part this or a specific channel',
+				'!+o <args>: make someone op',
+				'!-o <args>: make someone not op',
+			):
+				bot.notice( source, ' + ' + msg )
 
 	# make the bot speak
 	def __handle_say( self, *args ):
