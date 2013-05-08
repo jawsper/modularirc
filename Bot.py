@@ -198,19 +198,21 @@ class Bot( SingleServerIRCBot ):
 			elif cmd == 'raw':
 				self.connection.send_raw( ' '.join( args ) )
 				return
-		
-		if cmd == 'admins':
-			self.notice( source, 'Current operators:' )
-			self.notice( source, ' - global: {0}'.format( ' '.join( self.admin ) ) )
-			for chan in self.ops:
-				self.notice( source, ' - {0}: {1}'.format( chan, ' '.join( self.channel_ops[ chan ] ) ) )
-			return
+			elif cmd == 'admins':
+				self.notice( source, 'Current operators:' )
+				self.notice( source, ' - global: {0}'.format( ' '.join( self.admin ) ) )
+				for chan in self.admin_channels:
+					if not chan in self.channel_ops:
+						continue
+					self.notice( source, ' - {0}: {1}'.format( chan, ' '.join( self.channel_ops[ chan ] ) ) )
+				return
 		
 		if cmd == 'help':
 			self.privmsg( target, '!help: this help text' )
 		elif admin and cmd == 'admin_help':
 			self.notice( source, '!die: kill the bot' )
 			self.notice( source, '!raw: send raw irc command' )
+			self.notice( source, '!admins: see who are admin' )
 
 		for module_name, module in self.modules.items():
 			try:
