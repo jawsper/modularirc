@@ -18,7 +18,8 @@ class Bot( SingleServerIRCBot ):
 		self.config = ConfigParser.SafeConfigParser()
 		self.__reload_config()
 
-		self.ops = {}
+		self.channel_ops = {}
+		self.admin_channels = []
 		
 		s = self.config.get( "main", "server" ).split( ":", 1 )
 		server = s[0]
@@ -86,7 +87,7 @@ class Bot( SingleServerIRCBot ):
 		chan = e.arguments()[1]
 		people = e.arguments()[2].split( ' ' )
 		ops = map( lambda p: p[1:], filter( lambda p: p[0] == '@', people ) )
-		self.ops[ chan ] = ops
+		self.channel_ops[ chan ] = ops
 	
 	def die(self):
 		if self.modules:
@@ -101,6 +102,7 @@ class Bot( SingleServerIRCBot ):
 	def __reload_config( self ):
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
 		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
+		self.admin_channels = self.config.get( 'main', 'admin_channels' ).split( ';' )
 
 	def load_modules( self, reload = False ):
 		"""Find and load all modules.
@@ -175,7 +177,7 @@ class Bot( SingleServerIRCBot ):
 		# test for admin
 		admin = nm_to_uh( e.source() ) in self.admin
 		if not admin:
-			if e.target() in self.ops and nm_to_n( e.source() ) in self.ops[ e.target() ]:
+			if e.target() in self.admin_channels and e.target() in self.channel_ops and nm_to_n( e.source() ) in self.channel_ops[ e.target() ]:
 				admin = True
 
 		# nick is the sender of the message, target is either a channel or the sender.
@@ -201,7 +203,7 @@ class Bot( SingleServerIRCBot ):
 			self.notice( source, 'Current operators:' )
 			self.notice( source, ' - global: {0}'.format( ' '.join( self.admin ) ) )
 			for chan in self.ops:
-				self.notice( source, ' - {0}: {1}'.format( chan, ' '.join( self.ops[ chan ] ) ) )
+				self.notice( source, ' - {0}: {1}'.format( chan, ' '.join( self.channel_ops[ chan ] ) ) )
 			return
 		
 		if cmd == 'help':

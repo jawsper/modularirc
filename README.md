@@ -13,6 +13,7 @@ server=$host[:$port]
 channel=$channel
 nickname=$nickname
 admin=$admin([;$other_admin)*
+admin_channels=$channel[;$channel ...]
 </pre>
 
 ======
