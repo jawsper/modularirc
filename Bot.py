@@ -72,6 +72,7 @@ class Bot( SingleServerIRCBot ):
 				print( 'Socket timeout' )
 				return False
 			except BotReloadException as e:
+				self.connection.disconnect( "Reloading bot..." )
 				raise e
 			except Exception as e:
 				print( 'Exception: {0}'.format( e ) )
@@ -94,7 +95,7 @@ class Bot( SingleServerIRCBot ):
 		ops = map( lambda p: p[1:], filter( lambda p: p[0] == '@', people ) )
 		self.channel_ops[ chan ] = ops
 	
-	def die(self):
+	def die( self ):
 		if self.modules:
 			for module in self.modules:
 				try:
