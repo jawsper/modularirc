@@ -27,8 +27,7 @@ class ns( _module ):
 		if not self.username and self.password:
 			return
 		if cmd == 'help':
-			self.bot.privmsg( target, '!ns <command>: search train connections (send !ns help for more details)' )
-			return
+			return [ '!ns <command>: search train connections (send !ns help for more details)' ]
 		if len( args ) > 0 and args[0] != 'help':
 			try:
 				subcmd = args[0]

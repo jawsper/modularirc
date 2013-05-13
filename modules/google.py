@@ -26,8 +26,7 @@ class google( _module ):
 		if not self.api_key and self.cx:
 			return
 		if cmd == 'help':
-			self.bot.privmsg( target, '!google <query>: search on google' )
-			return
+			return [ '!google <query>: search on google' ]
 		if admin and cmd == 'google_clear_cache':
 			self.google_cache = {}
 		if cmd == 'google':
