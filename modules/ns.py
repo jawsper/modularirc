@@ -48,7 +48,7 @@ class ns( _module ):
 			'Usage: !ns <command> <arguments>',
 			'Commands:',
 			'help (no arguments): this help text',
-			'plan (<fromStation>,<toStation>): plan route from a to b',
+			'plan (<fromStation> [<viaStation>] <toStation>): plan route from a to b (optionally via c)',
 			'vtijden [<station>]: departure times (default Enschede)',
 			'storing [<station>]: storingen (station optioneel)'
 		]
