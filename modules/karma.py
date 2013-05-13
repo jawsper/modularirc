@@ -12,3 +12,13 @@ class karma( _module ):
 				self.karma[ item ] = 0
 			self.karma[ item ] += scoring
 			bot.notice( source, '{0}: {1}'.format( item, self.karma[ item ] ) )
+	def can_handle( self, cmd, admin ):
+		return cmd in ( 'karma', )
+	def handle( self, bot, cmd, args, source, target, admin ):
+		if cmd == 'help':
+			return [ '!karma: shows all karma' ]
+		elif cmd == 'karma':
+			return [
+				'Karma:'
+			] + map( lambda item, karma: '{0}: {1}'.format( item, karma ), self.karma.iteritems() )
+			
