@@ -5,6 +5,7 @@ from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_uh, is_channel
 import socket
 import modules
+import sqlite3
 
 class BotReloadException(Exception):
 	pass
@@ -19,6 +20,8 @@ class Bot( SingleServerIRCBot ):
 	def __init__( self ):
 		self.last_msg = -1
 		self.msg_flood_limit = 0.25
+		
+		self.db = sqlite3.connect( os.path.expanduser( '~/.ircbot.sqlite3' ) )
 		
 		self.modules = {}
 		self.admin_channels = []
@@ -290,3 +293,8 @@ class Bot( SingleServerIRCBot ):
 	def on_pubmsg( self, c, e ):
 		print( "on_pubmsg" )
 		self.on_privmsg( c, e )
+
+	def save_setting( self, group, key, value ):
+		pass
+	def load_setting( self, group, key ):
+		pass
