@@ -49,10 +49,6 @@ class Bot( SingleServerIRCBot ):
 			SingleServerIRCBot.__init__( self, [( server, port )], nickname, nickname )
 		self.channel = channel
 		self.load_modules()
-		#self.bot = MyLovelyIRCBot( config.get( "main", "channel" ), config.get( "main", "nickname" ), server, port, password )
-		#self.bot.set_admin( config.get( "main", "admin" ) )
-		#for module in modules.getmodules():
-	#		self.bot.add_module( modules.getmodule( module )( config.items( module ) ) )
 		signal.signal( signal.SIGINT, self.sigint_handler )
 		
 	#override
@@ -77,8 +73,10 @@ class Bot( SingleServerIRCBot ):
 			except Exception as e:
 				print( 'Exception: {0}'.format( e ) )
 			
-#	def on_all_raw_messages( self, c, e ):
-#		print( '{0}: {1}'.format( e.eventtype(), e.arguments() ) )
+	def __module_handle( self, handler, e ):
+		for mod in self.modules:
+			if hasattr( self.modules[ mod ], handler ):
+				getattr( self.modules[ mod ], handler )( self, e )
 		
 	def on_join( self, c, e ):
 #		print( "on_join: (t: {0}, s: {1})".format( e.target(), e.source() ) )
@@ -266,8 +264,10 @@ class Bot( SingleServerIRCBot ):
 
 	def on_privmsg( self, c, e ):
 		print( "on_privmsg" )
+		self.__module_handle( 'privmsg', e )
 		self.__process_command( c, e )
 
 	def on_pubmsg( self, c, e ):
 		print( "on_pubmsg" )
+		self.__module_handle( 'privmsg', e )
 		self.__process_command( c, e )
