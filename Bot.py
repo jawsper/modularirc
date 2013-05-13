@@ -73,10 +73,11 @@ class Bot( SingleServerIRCBot ):
 			except Exception as e:
 				print( 'Exception: {0}'.format( e ) )
 			
-	def __module_handle( self, handler, e ):
+	def __module_handle( self, handler, *args ):
+		handler = 'on_' + handler
 		for mod in self.modules:
 			if hasattr( self.modules[ mod ], handler ):
-				getattr( self.modules[ mod ], handler )( self, e )
+				getattr( self.modules[ mod ], handler )( self, *args )
 		
 	def on_join( self, c, e ):
 #		print( "on_join: (t: {0}, s: {1})".format( e.target(), e.source() ) )
@@ -264,10 +265,14 @@ class Bot( SingleServerIRCBot ):
 
 	def on_privmsg( self, c, e ):
 		print( "on_privmsg" )
-		self.__module_handle( 'privmsg', e )
+		
+		source = nm_to_n( e.source() )
+		target = e.target() if is_channel( e.target() ) else source
+		message = e.arguments()[0]
+		
+		self.__module_handle( 'privmsg', source, target, message )
 		self.__process_command( c, e )
 
 	def on_pubmsg( self, c, e ):
 		print( "on_pubmsg" )
-		self.__module_handle( 'privmsg', e )
-		self.__process_command( c, e )
+		self.on_privmsg( c, e )
