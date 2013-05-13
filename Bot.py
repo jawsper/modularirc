@@ -17,6 +17,9 @@ def print( *args ):
 class Bot( SingleServerIRCBot ):
 	"""The main brain of the IRC bot."""
 	def __init__( self ):
+		self.last_msg = -1
+		self.msg_flood_limit = 0.25
+		
 		self.modules = {}
 		self.admin_channels = []
 		self.config = ConfigParser.SafeConfigParser()
@@ -162,11 +165,22 @@ class Bot( SingleServerIRCBot ):
 #	def on_disconnect( self, c, e ):
 #		print( "on_disconnect" )
 
+	def __prevent_flood( self ):
+		if self.last_msg > 0:
+			if time.time() < self.last_msg + self.msg_flood_limit:
+				sleep_time = self.last_msg + self.msg_flood_limit - time.time()
+				print( 'Need to sleep for {0}'.format( sleep_time ) )
+				time.sleep( sleep_time )
+		self.last_msg = time.time()
+		
 	def notice( self, target, message ):
+		self.__prevent_flood()
 		self.connection.notice( target, message )
 	def privmsg( self, target, message ):
+		self.__prevent_flood()
 		self.connection.privmsg( target, message )
 	def action( self, target, message ):
+		self.__prevent_flood()
 		self.connection.action( target, message )
 
 	def __process_command( self, c, e ):
@@ -259,7 +273,7 @@ class Bot( SingleServerIRCBot ):
 					lines = module.handle( self, cmd, args, source, target, admin )
 					if lines:
 						for line in lines:
-							c.notice( target, line )
+							self.notice( target, line )
 			except Exception, e:
 				print( "Module '{0}' handle error: {1}".format( module_name, e ) )
 
