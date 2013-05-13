@@ -20,5 +20,5 @@ class karma( _module ):
 		elif cmd == 'karma':
 			return [
 				'Karma:'
-			] + map( lambda item, karma: '{0}: {1}'.format( item, karma ), self.karma.iteritems() )
+			] + map( lambda ( item, karma ): '{0}: {1}'.format( item, karma ), self.karma.iteritems() )
 			
