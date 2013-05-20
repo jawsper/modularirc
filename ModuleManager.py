@@ -5,6 +5,15 @@ class ModuleManager( object ):
 		self.bot = bot
 		self.modules = {}
 		self.loaded_modules = {}
+
+	def get_modules( self ):
+		pass
+
+	def get_loaded_modules( self ):
+		pass
+
+	def get_available_module( self ):
+		pass
 	
 	def add_module( self, module_name ):
 		if module_name in self.modules:
@@ -13,9 +22,9 @@ class ModuleManager( object ):
 			module = modules.get_module( module_name )
 			if module:
 				self.modules[ module_name ] = module
-				return
+				return 'Module added'
 		except Exception as e:
-			return str( e )
+			return 'Error loading module: {0}'.format( e )
 		return 'Module not available'
 
 	def remove_module( self, module_name ):
