@@ -1,6 +1,8 @@
 import pkgutil, os, sys
 
 def getmodules():
+	return get_modules()
+def get_modules():
 	"""Returns all modules that are found in the current package.
 	Excludes modules starting with '_'"""
 	return [ name for _,name, _ in pkgutil.iter_modules( [ os.path.dirname( __file__ ) ] ) if name[0] != '_' ]
