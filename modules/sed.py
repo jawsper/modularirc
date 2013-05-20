@@ -2,8 +2,8 @@ from _module import _module
 import re
 
 class sed( _module ):
-	def __init__( self, config, bot ):
-		super( sed, self ).__init__( config, bot )
+	def __init__( self, mgr ):
+		super( sed, self ).__init__( mgr )
 		self.buffer = []
 		self.buffer_max = 100
 	

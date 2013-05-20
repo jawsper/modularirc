@@ -9,6 +9,14 @@ class google( _module ):
 	
 	def __init__( self, mgr ):
 		_module.__init__( self, mgr )
+		
+		self.api_key = self.cx = None
+		
+		try:
+			self.api_key = self.get_config( 'api_key' )
+			self.cx = self.get_config( 'cx' )
+		except:
+			return
 
 		if not os.path.exists( self.google_cache_file ):
 			with open( self.google_cache_file, 'w' ):

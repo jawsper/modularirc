@@ -25,7 +25,7 @@ class admin_functions( _module ):
 					nicks = args
 				if dest != None:
 					for nick in nicks:
-						bot.connection.mode( dest, cmd + " " + nick )
+						self.mgr.bot.connection.mode( dest, cmd + " " + nick )
 			elif len( args ) == 1 and args[0][0] == '#':
 				self.mgr.bot.connection.mode( args[0], cmd + " " + source )
 			elif target[0] == '#':
@@ -65,13 +65,6 @@ class admin_functions( _module ):
 		self.privmsg( args.pop(0), ' '.join( args ) )
 	def __handle_notice( self, cmd, args, source, target, admin ):
 		self.notice( args.pop(0), ' '.join( args ) )
-
-	# show loaded modules
-	def __handle_modules( self, cmd, args, source, target, admin ):
-		self.notice( target, 'Loaded modules: ' + ' '.join( sorted( bot.modules ) ) )
-	# reload all the modules
-#	def __handle_reload_modules( self, cmd, args, source, target, admin ):
-#		self.mgr.load_modules( reload = True )
 
 	# show bot statistics
 	def __handle_stats( self, cmd, args, source, target, admin ):

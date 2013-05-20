@@ -13,8 +13,16 @@ class NsApiException(Exception):
 
 class ns( _module ):
 	"""Bot module to use the NS (Nederlandse Spoorwegen) API"""
-	def __init__( self, config, bot ):
-		super( ns, self ).__init__( config, bot )
+	def __init__( self, mgr ):
+		super( ns, self ).__init__( mgr )
+		self.username = self.password = None
+		
+		try:
+			self.username = self.get_config( 'username' )
+			self.password = self.get_config( 'password' )
+		except:
+			return
+		
 		try:
 			self.stations = self.__station_list()
 		except Exception as e:
