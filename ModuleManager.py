@@ -7,13 +7,15 @@ class ModuleManager( object ):
 		self.loaded_modules = {}
 
 	def get_modules( self ):
-		pass
+		return self.modules.iterkeys()
 
 	def get_loaded_modules( self ):
-		pass
+		return self.loaded_modules
 
-	def get_available_module( self ):
-		pass
+	def get_available_modules( self ):
+		modules = filter( lambda key: key not in self.loaded_modules, self.modules.keys() )
+		modules.sort()
+		return modules
 	
 	def add_module( self, module_name ):
 		if module_name in self.modules:
