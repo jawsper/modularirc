@@ -7,6 +7,8 @@ import socket
 import modules
 import sqlite3
 
+from ModuleManager import ModuleManager
+
 class BotReloadException(Exception):
 	pass
 
@@ -23,6 +25,7 @@ class Bot( SingleServerIRCBot ):
 		
 		self.db = sqlite3.connect( os.path.expanduser( '~/.ircbot.sqlite3' ) )
 		
+		self.modules = ModuleManager( self )
 		self.modules_dict = {}
 		self.admin_channels = []
 		self.config = ConfigParser.SafeConfigParser()
