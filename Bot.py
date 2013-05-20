@@ -223,7 +223,7 @@ class Bot( SingleServerIRCBot ):
 				for m in args:
 					if m in self.modules:
 						try:
-							self.notice( source, 'Reloading module "{}"'.format( m ) )
+							self.notice( source, 'Reloading module "{0}"'.format( m ) )
 							self.__add_module( m, True )
 						except Exception as e:
 							self.notice( source, "Failed loading module '{0}': {1}".format( m, e ) )
@@ -237,7 +237,7 @@ class Bot( SingleServerIRCBot ):
 				for m in args:
 					if not m in self.modules:
 						try:
-							self.notice( source, 'Enabling module "{}"'.format( m ) )
+							self.notice( source, 'Enabling module "{0}"'.format( m ) )
 							self.__add_module( m, True )
 						except Exception as e:
 							self.notice( source, "Failed loading module '{0}': {1}".format( m, e ) )
@@ -245,7 +245,7 @@ class Bot( SingleServerIRCBot ):
 				for m in args:
 					if m in self.modules:
 						try:
-							self.notice( source, 'Disabling module "{}"'.format( m ) )
+							self.notice( source, 'Disabling module "{0}"'.format( m ) )
 							self.modules[ m ].stop()
 						except:
 							pass
