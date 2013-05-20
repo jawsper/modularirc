@@ -23,7 +23,7 @@ class Bot( SingleServerIRCBot ):
 		
 		self.db = sqlite3.connect( os.path.expanduser( '~/.ircbot.sqlite3' ) )
 		
-		self.modules = {}
+		self.modules_dict = {}
 		self.admin_channels = []
 		self.config = ConfigParser.SafeConfigParser()
 		self.__reload_config()
@@ -81,9 +81,9 @@ class Bot( SingleServerIRCBot ):
 			
 	def __module_handle( self, handler, *args ):
 		handler = 'on_' + handler
-		for mod in self.modules:
-			if hasattr( self.modules[ mod ], handler ):
-				getattr( self.modules[ mod ], handler )( self, *args )
+		for mod in self.modules_dict:
+			if hasattr( self.modules_dict[ mod ], handler ):
+				getattr( self.modules_dict[ mod ], handler )( self, *args )
 		
 	def on_join( self, c, e ):
 #		print( "on_join: (t: {0}, s: {1})".format( e.target(), e.source() ) )
@@ -101,13 +101,13 @@ class Bot( SingleServerIRCBot ):
 		self.channel_ops[ chan ] = ops
 	
 	def die( self ):
-		if self.modules:
-			for module in self.modules:
+		if self.modules_dict:
+			for module in self.modules_dict:
 				try:
-					self.modules[module].stop()
+					self.modules_dict[module].stop()
 				except Exception as e:
 					print( 'Failed to stop module {0}: {1}'.format( module, e ) )
-			del self.modules
+			del self.modules_dict
 		SingleServerIRCBot.die(self)
 
 	def __reload_config( self ):
@@ -122,13 +122,13 @@ class Bot( SingleServerIRCBot ):
 		"""
 		if reload:
 			self.__reload_config()
-		if self.modules:
-			for module in self.modules:
+		if self.modules_dict:
+			for module in self.modules_dict:
 				try:
-					self.modules[module].stop()
+					self.modules_dict[module].stop()
 				except Exception as e:
 					print( 'Failed to stop module {0}: {1}'.format( module, e ) )
-		self.modules = {}
+		self.modules_dict = {}
 		for module in modules.getmodules():
 			try:
 				self.__add_module( module, reload )
@@ -147,7 +147,7 @@ class Bot( SingleServerIRCBot ):
 			cfg = self.config.items( module )
 		except ConfigParser.NoSectionError:
 			cfg = {}
-		self.modules[ module ] = modules.getmodule( module )( cfg, self )
+		self.modules_dict[ module ] = modules.getmodule( module )( cfg, self )
 
 	def sigint_handler( self, signal, frame ):
 		"""Handle SIGINT to shutdown gracefully with Ctrl+C"""
@@ -221,7 +221,7 @@ class Bot( SingleServerIRCBot ):
 				raise BotReloadException
 			elif cmd == 'reload_module' and len( args ) > 0:
 				for m in args:
-					if m in self.modules:
+					if m in self.modules_dict:
 						try:
 							self.notice( source, 'Reloading module "{0}"'.format( m ) )
 							self.__add_module( m, True )
@@ -230,12 +230,12 @@ class Bot( SingleServerIRCBot ):
 			elif cmd == 'available_modules':
 				a_m = []
 				for module in modules.getmodules():
-					if not module in self.modules:
+					if not module in self.modules_dict:
 						a_m.append( module )
 				self.notice( source, 'Available modules: ' + ', '.join( a_m ) )
 			elif cmd == 'enable_module' and len( args ) > 0:
 				for m in args:
-					if not m in self.modules:
+					if not m in self.modules_dict:
 						try:
 							self.notice( source, 'Enabling module "{0}"'.format( m ) )
 							self.__add_module( m, True )
@@ -243,13 +243,13 @@ class Bot( SingleServerIRCBot ):
 							self.notice( source, "Failed loading module '{0}': {1}".format( m, e ) )
 			elif cmd == 'disable_module' and len( args ) > 0:
 				for m in args:
-					if m in self.modules:
+					if m in self.modules_dict:
 						try:
 							self.notice( source, 'Disabling module "{0}"'.format( m ) )
-							self.modules[ m ].stop()
+							self.modules_dict[ m ].stop()
 						except:
 							pass
-						del self.modules[ m ]
+						del self.modules_dict[ m ]
 			elif cmd == 'raw':
 				self.connection.send_raw( ' '.join( args ) )
 				return
@@ -273,7 +273,7 @@ class Bot( SingleServerIRCBot ):
 			self.notice( source, '!enable_module <module>[ <module>...]:  enable one or more modules' )
 			self.notice( source, '!disable_module <module>[ <module>...]: disable one or more modules' )
 
-		for module_name, module in self.modules.items():
+		for module_name, module in self.modules_dict.items():
 			try:
 				if cmd == 'help' or module.can_handle( cmd, admin ):
 					lines = module.handle( self, cmd, args, source, target, admin )
