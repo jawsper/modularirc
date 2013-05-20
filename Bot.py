@@ -213,6 +213,12 @@ class Bot( SingleServerIRCBot ):
 					self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
 				except:
 					self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
+			elif cmd == 'set_config' and len( args ) == 3:
+				try:
+					self.set_config( *args )
+					self.notice( source, 'Set config setting' )
+				except:
+					self.notice( source, 'Failed setting config setting' )
 			elif cmd == 'reload_module' and len( args ) > 0:
 				for m in args:
 					if m in self.modules_dict:
