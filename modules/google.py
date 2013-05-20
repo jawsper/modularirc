@@ -7,8 +7,8 @@ class google( _module ):
 	"""Bot module to search on google"""
 	google_cache_file = os.path.expanduser( '~/.google_cache' )
 	
-	def __init__( self, config, bot ):
-		_module.__init__( self, config, bot )
+	def __init__( self, mgr ):
+		_module.__init__( self, mgr )
 
 		if not os.path.exists( self.google_cache_file ):
 			with open( self.google_cache_file, 'w' ):
@@ -22,7 +22,7 @@ class google( _module ):
 	def can_handle( self, cmd, admin ):
 		return self.api_key and self.cx and cmd == 'google' or ( admin and cmd == 'google_clear_cache' )
 		
-	def handle( self, bot, cmd, args, source, target, admin ):
+	def handle( self, cmd, args, source, target, admin ):
 		if not self.api_key and self.cx:
 			return
 		if cmd == 'help':

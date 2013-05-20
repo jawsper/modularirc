@@ -23,7 +23,7 @@ class ns( _module ):
 	def can_handle( self, cmd, admin ):
 		return self.username and self.password and cmd == 'ns'
 	
-	def handle( self, bot, cmd, args, source, target, admin ):
+	def handle( self, cmd, args, source, target, admin ):
 		if not self.username and self.password:
 			return
 		if cmd == 'help':

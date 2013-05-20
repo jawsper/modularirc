@@ -8,11 +8,11 @@ class admin_functions( _module ):
 	def can_handle( self, cmd, admin ):
 		return admin and hasattr( self, self.__handler( cmd ) ) or cmd in ( '+o', '-o' )
 
-	def handle( self, bot, cmd, args, source, target, admin ):
+	def handle( self, cmd, args, source, target, admin ):
 		if not admin:
 			return
 		if hasattr( self, self.__handler( cmd ) ):
-			getattr( self, self.__handler( cmd ) )( bot, cmd, args, source, target, admin )
+			getattr( self, self.__handler( cmd ) )( cmd, args, source, target, admin )
 		if cmd in ( '+o', '-o' ):
 			if len( args ) > 1:
 				dest = None
@@ -27,17 +27,17 @@ class admin_functions( _module ):
 					for nick in nicks:
 						bot.connection.mode( dest, cmd + " " + nick )
 			elif len( args ) == 1 and args[0][0] == '#':
-				bot.connection.mode( args[0], cmd + " " + source )
+				self.mgr.bot.connection.mode( args[0], cmd + " " + source )
 			elif target[0] == '#':
-				bot.connection.mode( target, cmd + " " + source )
+				self.mgr.bot.connection.mode( target, cmd + " " + source )
 			else:
-				bot.notice( source, "Usage: <+|->o <#<channel>|nicknames>" )
+				self.notice( source, "Usage: <+|->o <#<channel>|nicknames>" )
 
 
 	# command handlers
 	
 	# !admin_help handler
-	def __handle_admin_help( self, bot, cmd, args, source, target, admin ):
+	def __handle_admin_help( self, cmd, args, source, target, admin ):
 		if admin:
 			for msg in (
 				'!update_source: updates the source of the bot. does not reload the bot or the modules',
@@ -52,54 +52,54 @@ class admin_functions( _module ):
 				'!+o <args>: make someone op',
 				'!-o <args>: make someone not op',
 			):
-				bot.notice( source, msg )
+				self.notice( source, msg )
 	# handle update git
-	def __handle_update_source( self, bot, cmd, args, source, target, admin ):
-		bot.notice( source, 'Please wait, running git...' )
+	def __handle_update_source( self, cmd, args, source, target, admin ):
+		self.mgr.notice( source, 'Please wait, running git...' )
 		result = subprocess.Popen( [ 'git', 'pull' ], stdout = subprocess.PIPE, cwd = os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) ) ).communicate()[0]
-		bot.notice( source, 'Result: ' + result )
+		self.notice( source, 'Result: ' + result )
 	# make the bot speak
 	def __handle_say( self, *args ):
 		self.__handle_privmsg( *args )
-	def __handle_privmsg( self, bot, cmd, args, source, target, admin ):
-		bot.privmsg( args.pop(0), ' '.join( args ) )
-	def __handle_notice( self, bot, cmd, args, source, target, admin ):
-		bot.notice( args.pop(0), ' '.join( args ) )
+	def __handle_privmsg( self, cmd, args, source, target, admin ):
+		self.privmsg( args.pop(0), ' '.join( args ) )
+	def __handle_notice( self, cmd, args, source, target, admin ):
+		self.notice( args.pop(0), ' '.join( args ) )
 
 	# show loaded modules
-	def __handle_modules( self, bot, cmd, args, source, target, admin ):
-		bot.notice( target, 'Loaded modules: ' + ' '.join( sorted( bot.modules ) ) )
+	def __handle_modules( self, cmd, args, source, target, admin ):
+		self.notice( target, 'Loaded modules: ' + ' '.join( sorted( bot.modules ) ) )
 	# reload all the modules
-	def __handle_reload_modules( self, bot, cmd, args, source, target, admin ):
-		bot.load_modules( reload = True )
+#	def __handle_reload_modules( self, cmd, args, source, target, admin ):
+#		self.mgr.load_modules( reload = True )
 
 	# show bot statistics
-	def __handle_stats( self, bot, cmd, args, source, target, admin ):
-		for chname, chobj in bot.channels.items():
-			bot.notice( source, "--- Channel statistics ---" )
-			bot.notice( source, "Channel: " + chname )
+	def __handle_stats( self, cmd, args, source, target, admin ):
+		for chname, chobj in self.mgr.bot.channels.items():
+			self.notice( source, "--- Channel statistics ---" )
+			self.notice( source, "Channel: " + chname )
 			users = chobj.users()
 			users.sort()
-			bot.notice( source, "Users: " + ", ".join( users ) )
+			self.notice( source, "Users: " + ", ".join( users ) )
 			opers = chobj.opers()
 			opers.sort()
-			bot.notice( source, "Opers: " + ", ".join( opers ) )
+			self.notice( source, "Opers: " + ", ".join( opers ) )
 			voiced = chobj.voiced()
 			voiced.sort()
-			bot.notice( source, "Voiced: " + ", ".join( voiced ) )
+			self.notice( source, "Voiced: " + ", ".join( voiced ) )
 
 	# change bot nick
-	def __handle_nick( self, bot, cmd, args, source, target, admin ):
-		bot.connection.nick( args[0] )
+	def __handle_nick( self, cmd, args, source, target, admin ):
+		self.mgr.bot.connection.nick( args[0] )
 
 	# make bot join channel(s)
-	def __handle_join( self, bot, cmd, args, source, target, admin ):
+	def __handle_join( self, cmd, args, source, target, admin ):
 		for channel in args:
-			bot.connection.join( channel )
+			self.mgr.bot.connection.join( channel )
 
 	# make bot leave channel(s)
-	def __handle_part( self, bot, cmd, args, source, target, admin ):
+	def __handle_part( self, cmd, args, source, target, admin ):
 		if len( args ) > 0:
-			bot.connection.part( args )
+			self.mgr.bot.connection.part( args )
 		elif target[0] == '#':
-			bot.connection.part( target )
+			self.mgr.bot.connection.part( target )

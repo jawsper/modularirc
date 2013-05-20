@@ -92,9 +92,9 @@ class Bot( SingleServerIRCBot ):
 			
 	def __module_handle( self, handler, *args ):
 		handler = 'on_' + handler
-		for mod in self.modules_dict:
-			if hasattr( self.modules_dict[ mod ], handler ):
-				getattr( self.modules_dict[ mod ], handler )( self, *args )
+		for module in self.modules.get_loaded_modules().itervalues():
+			if hasattr( module, handler ):
+				getattr( module, handler )( *args )
 		
 	def on_join( self, c, e ):
 		self.connection.names( [e.target()] )
@@ -261,7 +261,7 @@ class Bot( SingleServerIRCBot ):
 		for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
 			try:
 				if cmd == 'help' or module.can_handle( cmd, admin ):
-					lines = module.handle( self, cmd, args, source, target, admin )
+					lines = module.handle( cmd, args, source, target, admin )
 					if lines:
 						for line in lines:
 							self.notice( target, line )
