@@ -8,6 +8,10 @@ class ModuleManager( object ):
 		for module_name in modules.get_modules():
 			self.add_module( module_name )
 
+	def unload( self ):
+		for module_name in self.modules:
+			self.remove_module( module_name )
+
 	def reload_modules( self ):
 		pass
 
@@ -79,9 +83,9 @@ class ModuleManager( object ):
 		self.enable_module( module_name )
 		return 'Module reloaded'
 
-	def get_config( self, group, key, value ):
-		pass
+	def get_config( self, group, key ):
+		return self.bot.get_config( group, key )
 
-	def set_config( self, group, key ):
-		pass
+	def set_config( self, group, key, value ):
+		return self.bot.set_config( group, key, value )
 
