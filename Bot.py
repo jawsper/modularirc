@@ -287,12 +287,18 @@ class Bot( SingleServerIRCBot ):
 
 	def get_config( self, group, key ):
 		resultset = self.db.execute( 'select `value` from config where `group` = {0} and `key` = {1}'.format( prepare( group ), prepare( key ) ) )
-		value = resultset.fetchone()[0]
-		return value
+		value = resultset.fetchone()
+		if value == None:
+			return False
+		return value[0]
 
 	def set_config( self, group, key, value ):
 		cursor = self.db.cursor()
-		cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( {0}, {1}, {2} )'.format( prepare( group ), prepare( key ), prepare( value ) ) )
+		data = map( lambda x: prepare(x), [ group, key, value ] )
+		if self.get_config( group, key ) != False:
+			cursor.execute( 'update config set `value` = {2} where `group` = {0} and `key` = {1}'.format( *data ) )
+		else:
+			cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( {0}, {1}, {2} )'.format( *data ) )
 		cursor.close()
 		self.db.commit()
 		
