@@ -33,6 +33,9 @@ class ModuleManager( object ):
 			return 'Module already enabled'
 		try:
 			self.loaded_modules[ module_name ] = self.modules[ module_name ]( self )
+		except Exception as e:
+			return 'Module failed to load: {0}'.format( e )
+		return 'Module enabled'
 
 	def disable_module( self, module_name ):
 		if not module_name in self.loaded_modules:
@@ -42,6 +45,13 @@ class ModuleManager( object ):
 		except Exception as e:
 			pass
 		del self.loaded_modules[ module_name ]
+		return 'Module disabled'
 
 	def reload_module( self, module_name ):
-		pass
+		if not module_name in self.modules:
+			return 'Module not available'
+		if module_name in self.loaded_modules:
+			self.disable_module( module_name )
+		self.enable_module( module_name )
+		return 'Module reloaded'
+
