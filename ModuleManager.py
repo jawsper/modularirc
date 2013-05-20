@@ -22,17 +22,26 @@ class ModuleManager( object ):
 		if not module_name in self.modules:
 			return 'Module not available'
 		if module_name in self.loaded_modules:
-			try:
-				self.loaded_modules[ module_name ].stop()
-			except Exception as e:
-				pass
-			del self.loaded_modules[ module_name ]
+			self.disable_module( module_name )
 		del self.modules[ module_name ]
 		return 'Module removed'
 			
 	def enable_module( self, module_name ):
-		pass
+		if not module_name in self.modules:
+			return 'Module not available'
+		if module_name in self.loaded_modules:
+			return 'Module already enabled'
+		try:
+			self.loaded_modules[ module_name ] = self.modules[ module_name ]( self )
+
 	def disable_module( self, module_name ):
-		pass
+		if not module_name in self.loaded_modules:
+			return 'Module not enabled'
+		try:
+			self.loaded_modules[ module_name ].stop()
+		except Exception as e:
+			pass
+		del self.loaded_modules[ module_name ]
+
 	def reload_module( self, module_name ):
 		pass
