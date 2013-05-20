@@ -297,12 +297,19 @@ class Bot( SingleServerIRCBot ):
 		print( "on_pubmsg" )
 		self.on_privmsg( c, e )
 
-	def get_config( self, group, key ):
-		resultset = self.db.execute( 'select `value` from config where `group` = {0} and `key` = {1}'.format( prepare( group ), prepare( key ) ) )
-		value = resultset.fetchone()
-		if value == None:
-			raise Exception
-		return value[0]
+	def get_config( self, group, key = None ):
+		if key == None:
+			resultset = self.db.execute( 'select `key`, `value` from config where `group` = {0}'.format( prepare( group ) ) )
+			values = {}
+			for ( key, value ) in resultset.fetchall():
+				values[ key ] = value
+			return values
+		else:
+			resultset = self.db.execute( 'select `value` from config where `group` = {0} and `key` = {1}'.format( prepare( group ), prepare( key ) ) )
+			value = resultset.fetchone()
+			if value == None:
+				raise Exception
+			return value[0]
 
 	def set_config( self, group, key, value ):
 		cursor = self.db.cursor()
