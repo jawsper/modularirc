@@ -256,9 +256,9 @@ class Bot( SingleServerIRCBot ):
 			elif cmd == 'admins':
 				self.notice( source, 'Current operators:' )
 				self.notice( source, ' - global: {0}'.format( ' '.join( self.admin ) ) )
-				for chan in self.admin_channels:
-					if not chan in self.channel_ops:
-						continue
+				for chan in [ chan for chan in self.admin_channels if chan in self.channel_ops ]:
+#					if not chan in self.channel_ops:
+#						continue
 					self.notice( source, ' - {0}: {1}'.format( chan, ' '.join( self.channel_ops[ chan ] ) ) )
 				return
 		
@@ -280,11 +280,11 @@ class Bot( SingleServerIRCBot ):
 					if lines:
 						for line in lines:
 							self.notice( target, line )
-			except Exception, e:
+			except Exception as e:
 				print( "Module '{0}' handle error: {1}".format( module_name, e ) )
 
 	def on_privmsg( self, c, e ):
-		print( "on_privmsg" )
+		#print( "on_privmsg" )
 		
 		source = nm_to_n( e.source() )
 		target = e.target() if is_channel( e.target() ) else source
@@ -294,10 +294,11 @@ class Bot( SingleServerIRCBot ):
 		self.__process_command( c, e )
 
 	def on_pubmsg( self, c, e ):
-		print( "on_pubmsg" )
+		#print( "on_pubmsg" )
 		self.on_privmsg( c, e )
 
 	def get_config( self, group, key = None ):
+		"""gets a config value"""
 		if key == None:
 			resultset = self.db.execute( 'select `key`, `value` from config where `group` = {0}'.format( prepare( group ) ) )
 			values = {}
@@ -312,6 +313,7 @@ class Bot( SingleServerIRCBot ):
 			return value[0]
 
 	def set_config( self, group, key, value ):
+		"""sets a config value"""
 		cursor = self.db.cursor()
 		data = map( lambda x: prepare(x), [ group, key, value ] )
 		try:
