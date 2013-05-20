@@ -207,6 +207,12 @@ class Bot( SingleServerIRCBot ):
 				return
 			elif cmd == 'restart_class':
 				raise BotReloadException
+			elif cmd == 'get_config' and len( args ) == 2:
+				try:
+					value = self.get_config( args[0], args[1] )
+					self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
+				except:
+					self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
 			elif cmd == 'reload_module' and len( args ) > 0:
 				for m in args:
 					if m in self.modules_dict:
@@ -289,15 +295,16 @@ class Bot( SingleServerIRCBot ):
 		resultset = self.db.execute( 'select `value` from config where `group` = {0} and `key` = {1}'.format( prepare( group ), prepare( key ) ) )
 		value = resultset.fetchone()
 		if value == None:
-			return False
+			raise Exception
 		return value[0]
 
 	def set_config( self, group, key, value ):
 		cursor = self.db.cursor()
 		data = map( lambda x: prepare(x), [ group, key, value ] )
-		if self.get_config( group, key ) != False:
+		try:
+			self.get_config( group, key )
 			cursor.execute( 'update config set `value` = {2} where `group` = {0} and `key` = {1}'.format( *data ) )
-		else:
+		except:
 			cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( {0}, {1}, {2} )'.format( *data ) )
 		cursor.close()
 		self.db.commit()
