@@ -1,8 +1,6 @@
 class _module(object):
-	def __init__( self, config, bot ):
-		self.bot = bot
-		for k, v in config:
-			setattr( self, k, v )
+	def __init__( self, manager ):
+		self.mgr = manager
 	def stop(self):
 		pass
 	def can_handle( self, cmd, admin ):
