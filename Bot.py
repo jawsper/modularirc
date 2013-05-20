@@ -228,28 +228,13 @@ class Bot( SingleServerIRCBot ):
 						except Exception as e:
 							self.notice( source, "Failed loading module '{0}': {1}".format( m, e ) )
 			elif cmd == 'available_modules':
-				a_m = []
-				for module in modules.getmodules():
-					if not module in self.modules_dict:
-						a_m.append( module )
-				self.notice( source, 'Available modules: ' + ', '.join( a_m ) )
+				self.notice( source, 'Available modules: ' + ', '.join( self.modules.get_available_modules() ) )
 			elif cmd == 'enable_module' and len( args ) > 0:
 				for m in args:
-					if not m in self.modules_dict:
-						try:
-							self.notice( source, 'Enabling module "{0}"'.format( m ) )
-							self.__add_module( m, True )
-						except Exception as e:
-							self.notice( source, "Failed loading module '{0}': {1}".format( m, e ) )
+					self.notice( source, self.modules.enable_module( m ) )
 			elif cmd == 'disable_module' and len( args ) > 0:
 				for m in args:
-					if m in self.modules_dict:
-						try:
-							self.notice( source, 'Disabling module "{0}"'.format( m ) )
-							self.modules_dict[ m ].stop()
-						except:
-							pass
-						del self.modules_dict[ m ]
+					self.notice( source, self.modules.disable_module( m ) )
 			elif cmd == 'raw':
 				self.connection.send_raw( ' '.join( args ) )
 				return
@@ -273,7 +258,7 @@ class Bot( SingleServerIRCBot ):
 			self.notice( source, '!enable_module <module>[ <module>...]:  enable one or more modules' )
 			self.notice( source, '!disable_module <module>[ <module>...]: disable one or more modules' )
 
-		for module_name, module in self.modules_dict.items():
+		for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
 			try:
 				if cmd == 'help' or module.can_handle( cmd, admin ):
 					lines = module.handle( self, cmd, args, source, target, admin )
