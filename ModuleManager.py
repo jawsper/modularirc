@@ -9,7 +9,7 @@ class ModuleManager( object ):
 			self.add_module( module_name )
 
 	def unload( self ):
-		for module_name in self.modules:
+		for module_name in self.modules.keys():
 			self.remove_module( module_name )
 
 	def reload_modules( self ):
@@ -17,7 +17,7 @@ class ModuleManager( object ):
 		for module_name in [ m for m in modules.get_modules() if m not in self.modules ]:
 			self.add_module( module_name )
 		# remove modules that no longer exist
-		for module_name in [ m for in m self.modules.iterkeys() if m not in modules.get_modules() ]:
+		for module_name in [ m for m in self.modules.iterkeys() if m not in modules.get_modules() ]:
 			self.remove_module( module_name )
 
 	def get_modules( self ):

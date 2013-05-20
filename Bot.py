@@ -27,7 +27,7 @@ class Bot( SingleServerIRCBot ):
 		self.config = ConfigParser.SafeConfigParser()
 		self.__reload_config()
 		
-		self.db = sqlite3.connect( os.path.expanduser( '~/.ircbot.sqlite3' )
+		self.db = sqlite3.connect( os.path.expanduser( '~/.ircbot.sqlite3' ) )
 		cursor = self.db.cursor()
 		try:
 			cursor.execute( 'select * from config limit 1' )
@@ -87,8 +87,9 @@ class Bot( SingleServerIRCBot ):
 			except BotReloadException as e:
 				self.connection.disconnect( "Reloading bot..." )
 				raise e
-			except Exception as e:
-				print( 'Exception: {0}'.format( e ) )
+			#except Exception as e:
+			#	raise e
+			#	print( 'Exception: {0}'.format( e ) )
 			
 	def __module_handle( self, handler, *args ):
 		handler = 'on_' + handler
@@ -207,6 +208,7 @@ class Bot( SingleServerIRCBot ):
 				return
 			elif cmd == 'restart_class':
 				raise BotReloadException
+			# config commands
 			elif cmd == 'get_config' and len( args ) == 2:
 				try:
 					value = self.get_config( args[0], args[1] )
@@ -217,24 +219,23 @@ class Bot( SingleServerIRCBot ):
 				try:
 					self.set_config( *args )
 					self.notice( source, 'Set config setting' )
-				except:
-					self.notice( source, 'Failed setting config setting' )
-			elif cmd == 'reload_module' and len( args ) > 0:
-				for m in args:
-					if m in self.modules_dict:
-						try:
-							self.notice( source, 'Reloading module "{0}"'.format( m ) )
-							self.__add_module( m, True )
-						except Exception as e:
-							self.notice( source, "Failed loading module '{0}': {1}".format( m, e ) )
+				except Exception as e:
+					self.notice( source, 'Failed setting config setting: {0}'.format( e ) )
+			# modules commands
+			elif cmd == 'modules':
+				self.notice( source, 'Modules: {0}'.format( ', '.join( self.modules.get_modules() ) ) )
 			elif cmd == 'available_modules':
 				self.notice( source, 'Available modules: ' + ', '.join( self.modules.get_available_modules() ) )
+			elif cmd == 'reload_module' and len( args ) > 0:
+				for m in args:
+					self.notice( source, self.modules.reload_module( m ) )
 			elif cmd == 'enable_module' and len( args ) > 0:
 				for m in args:
 					self.notice( source, self.modules.enable_module( m ) )
 			elif cmd == 'disable_module' and len( args ) > 0:
 				for m in args:
 					self.notice( source, self.modules.disable_module( m ) )
+			# other base admin commands
 			elif cmd == 'raw':
 				self.connection.send_raw( ' '.join( args ) )
 				return
@@ -285,13 +286,13 @@ class Bot( SingleServerIRCBot ):
 	def get_config( self, group, key = None ):
 		"""gets a config value"""
 		if key == None:
-			resultset = self.db.execute( 'select `key`, `value` from config where `group` = {0}'.format( prepare( group ) ) )
+			resultset = self.db.execute( 'select `key`, `value` from config where `group` = :group', { 'group': group } )
 			values = {}
 			for ( key, value ) in resultset.fetchall():
 				values[ key ] = value
 			return values
 		else:
-			resultset = self.db.execute( 'select `value` from config where `group` = {0} and `key` = {1}'.format( prepare( group ), prepare( key ) ) )
+			resultset = self.db.execute( 'select `value` from config where `group` = :group and `key` = :key', { 'group': group, 'key': key } )
 			value = resultset.fetchone()
 			if value == None:
 				raise Exception
@@ -300,12 +301,11 @@ class Bot( SingleServerIRCBot ):
 	def set_config( self, group, key, value ):
 		"""sets a config value"""
 		cursor = self.db.cursor()
-		data = map( lambda x: prepare(x), [ group, key, value ] )
+		data = { 'group': group, 'key': key, 'value': value }
 		try:
 			self.get_config( group, key )
-			cursor.execute( 'update config set `value` = {2} where `group` = {0} and `key` = {1}'.format( *data ) )
+			cursor.execute( 'update config set `value` = :value where `group` = :group and `key` = :key', data )
 		except:
-			cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( {0}, {1}, {2} )'.format( *data ) )
+			cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( :group, :key, :value )', data )
 		cursor.close()
 		self.db.commit()
-		
