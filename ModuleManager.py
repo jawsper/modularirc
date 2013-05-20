@@ -10,7 +10,7 @@ class ModuleManager( object ):
 		if module_name in self.modules:
 			return 'Module already available'
 		try:
-			module = modules.getmodule( module_name )
+			module = modules.get_module( module_name )
 			if module:
 				self.modules[ module_name ] = module
 				return
