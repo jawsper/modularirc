@@ -25,7 +25,10 @@ class Bot( SingleServerIRCBot ):
 		
 		self.admin_channels = []
 		self.config = ConfigParser.SafeConfigParser()
-		self.__reload_config()
+		self.config.read( os.path.expanduser( "~/.ircbot" ) )
+		
+		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
+		self.admin_channels = self.config.get( 'main', 'admin_channels' ).split( ';' )
 		
 		self.db = sqlite3.connect( os.path.join( os.path.dirname( __file__ ), 'ircbot.sqlite3' ) )
 		cursor = self.db.cursor()
@@ -64,11 +67,11 @@ class Bot( SingleServerIRCBot ):
 		
 		self.channel = channel
 		
-		self.load_modules()
+		for module_name in self.modules.get_available_modules():
+			self.modules.enable_module( module_name )
 		
 		signal.signal( signal.SIGINT, self.sigint_handler )
-		
-	#override
+
 	def start( self ):
 		self._connect()
 		
@@ -91,71 +94,16 @@ class Bot( SingleServerIRCBot ):
 			#	raise e
 			#	print( 'Exception: {0}'.format( e ) )
 			
-	def __module_handle( self, handler, *args ):
-		handler = 'on_' + handler
-		for module in self.modules.get_loaded_modules().itervalues():
-			if hasattr( module, handler ):
-				getattr( module, handler )( *args )
-		
-	def on_join( self, c, e ):
-		self.connection.names( [e.target()] )
-
-	def on_mode( self, c, e ):
-		self.connection.names( [e.target()] )
-
-	def on_namreply( self, c, e ):
-		chan = e.arguments()[1]
-		people = e.arguments()[2].split( ' ' )
-		ops = map( lambda p: p[1:], filter( lambda p: p[0] == '@', people ) )
-		self.channel_ops[ chan ] = ops
 	
 	def die( self ):
 		self.modules.unload()
 		SingleServerIRCBot.die(self)
-
-	def __reload_config( self ):
-		self.config.read( os.path.expanduser( "~/.ircbot" ) )
-		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
-		self.admin_channels = self.config.get( 'main', 'admin_channels' ).split( ';' )
-
-	def load_modules( self, reload = False ):
-		"""Find and load all modules.
-		Arguments:
-		reload: force reload of config and modules
-		"""
-		if reload:
-			self.__reload_config()
-		for module_name in self.modules.get_loaded_modules().iterkeys():
-			self.modules.disable_module( module_name )
-		for module_name in self.modules.get_available_modules():
-			self.modules.enable_module( module_name )
-
-	def __add_module( self, module, reload = False ):
-		"""Add named module to loaded modules.
-		Arguments:
-		module: the name of the module
-		reload: force reload of the module
-		"""
-		self.modules.reload_module( module )
 
 	def sigint_handler( self, signal, frame ):
 		"""Handle SIGINT to shutdown gracefully with Ctrl+C"""
 		print( 'Ctrl+C pressed, shutting down!' )
 		self.die()
 		sys.exit(0)
-
-	def on_nicknameinuse( self, c, e ):
-		"""Gets called if the server complains about the name being in use. Tries to set the nick to nick + '_'"""
-		print( "on_nicknameinuse" )
-		c.nick( c.get_nickname() + "_" )
-
-	def on_welcome( self, c, e ):
-		print( "on_welcome" )
-		c.join( self.channel )
-
-
-#	def on_disconnect( self, c, e ):
-#		print( "on_disconnect" )
 
 	def __prevent_flood( self ):
 		if self.last_msg > 0:
@@ -174,6 +122,13 @@ class Bot( SingleServerIRCBot ):
 	def action( self, target, message ):
 		self.__prevent_flood()
 		self.connection.action( target, message )
+
+	def __module_handle( self, handler, *args ):
+		"""Passed the "on_*" handlers through to the modules that support them"""
+		handler = 'on_' + handler
+		for module in self.modules.get_loaded_modules().itervalues():
+			if hasattr( module, handler ):
+				getattr( module, handler )( *args )
 
 	def __process_command( self, c, e ):
 		"""Process a message coming from the server."""
@@ -229,6 +184,8 @@ class Bot( SingleServerIRCBot ):
 			elif cmd == 'reload_module' and len( args ) > 0:
 				for m in args:
 					self.notice( source, self.modules.reload_module( m ) )
+			elif cmd == 'reload_modules':
+				self.modules.reload_modules()
 			elif cmd == 'enable_module' and len( args ) > 0:
 				for m in args:
 					self.notice( source, self.modules.enable_module( m ) )
@@ -243,8 +200,6 @@ class Bot( SingleServerIRCBot ):
 				self.notice( source, 'Current operators:' )
 				self.notice( source, ' - global: {0}'.format( ' '.join( self.admin ) ) )
 				for chan in [ chan for chan in self.admin_channels if chan in self.channel_ops ]:
-#					if not chan in self.channel_ops:
-#						continue
 					self.notice( source, ' - {0}: {1}'.format( chan, ' '.join( self.channel_ops[ chan ] ) ) )
 				return
 		
@@ -282,6 +237,27 @@ class Bot( SingleServerIRCBot ):
 	def on_pubmsg( self, c, e ):
 		#print( "on_pubmsg" )
 		self.on_privmsg( c, e )
+		
+	def on_join( self, c, e ):
+		self.connection.names( [e.target()] )
+
+	def on_mode( self, c, e ):
+		self.connection.names( [e.target()] )
+
+	def on_namreply( self, c, e ):
+		chan = e.arguments()[1]
+		people = e.arguments()[2].split( ' ' )
+		ops = map( lambda p: p[1:], filter( lambda p: p[0] == '@', people ) )
+		self.channel_ops[ chan ] = ops
+
+	def on_nicknameinuse( self, c, e ):
+		"""Gets called if the server complains about the name being in use. Tries to set the nick to nick + '_'"""
+		print( "on_nicknameinuse" )
+		c.nick( c.get_nickname() + "_" )
+
+	def on_welcome( self, c, e ):
+		print( "on_welcome" )
+		c.join( self.channel )
 
 	def get_config( self, group, key = None ):
 		"""gets a config value"""
