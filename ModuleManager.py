@@ -83,6 +83,14 @@ class ModuleManager( object ):
 		self.enable_module( module_name )
 		return 'Module reloaded'
 
+	# methods from Bot
+	
+	def notice( self, target, message ):
+		self.bot.notice( target, message )
+	
+	def privmsg( self, target, message ):
+		self.bot.privmsg( target, message )
+
 	def get_config( self, group, key ):
 		return self.bot.get_config( group, key )
 
