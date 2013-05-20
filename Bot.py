@@ -27,7 +27,7 @@ class Bot( SingleServerIRCBot ):
 		self.config = ConfigParser.SafeConfigParser()
 		self.__reload_config()
 		
-		self.db = sqlite3.connect( os.path.expanduser( '~/.ircbot.sqlite3' ) )
+		self.db = sqlite3.connect( os.path.join( os.path.dirname( __file__ ), 'ircbot.sqlite3' ) )
 		cursor = self.db.cursor()
 		try:
 			cursor.execute( 'select * from config limit 1' )
