@@ -23,13 +23,18 @@ class Bot( SingleServerIRCBot ):
 		self.last_msg = -1
 		self.msg_flood_limit = 0.25
 		
-		self.db = sqlite3.connect( os.path.expanduser( '~/.ircbot.sqlite3' ) )
-		
-		self.modules = ModuleManager( self )
-		self.modules_dict = {}
 		self.admin_channels = []
 		self.config = ConfigParser.SafeConfigParser()
 		self.__reload_config()
+		
+		self.db = sqlite3.connect( os.path.expanduser( '~/.ircbot.sqlite3' )
+		cursor = self.db.cursor()
+		try:
+			cursor.execute( 'select * from config limit 1' )
+		except sqlite3.OperationalError: # table no exist
+			cursor.execute( 'create table config ( `group` varchar(100), `key` varchar(100), `value` varchar(100) NULL )' )
+		cursor.close()
+		self.modules = ModuleManager( self )
 
 		self.channel_ops = {}
 		
@@ -56,8 +61,11 @@ class Bot( SingleServerIRCBot ):
 			SingleServerIRCBot.__init__( self, [( server, port, password )], nickname, nickname )
 		else:
 			SingleServerIRCBot.__init__( self, [( server, port )], nickname, nickname )
+		
 		self.channel = channel
+		
 		self.load_modules()
+		
 		signal.signal( signal.SIGINT, self.sigint_handler )
 		
 	#override
@@ -89,28 +97,19 @@ class Bot( SingleServerIRCBot ):
 				getattr( self.modules_dict[ mod ], handler )( self, *args )
 		
 	def on_join( self, c, e ):
-#		print( "on_join: (t: {0}, s: {1})".format( e.target(), e.source() ) )
 		self.connection.names( [e.target()] )
 
 	def on_mode( self, c, e ):
-#		print( 'on_mode: {0}, {1}: {2}'.format( e.target(), e.source(), e.arguments() ) )
 		self.connection.names( [e.target()] )
 
 	def on_namreply( self, c, e ):
-#		print( 'on_namreply: {0}'.format( e.arguments() ) )
 		chan = e.arguments()[1]
 		people = e.arguments()[2].split( ' ' )
 		ops = map( lambda p: p[1:], filter( lambda p: p[0] == '@', people ) )
 		self.channel_ops[ chan ] = ops
 	
 	def die( self ):
-		if self.modules_dict:
-			for module in self.modules_dict:
-				try:
-					self.modules_dict[module].stop()
-				except Exception as e:
-					print( 'Failed to stop module {0}: {1}'.format( module, e ) )
-			del self.modules_dict
+		self.modules.unload()
 		SingleServerIRCBot.die(self)
 
 	def __reload_config( self ):
@@ -125,18 +124,10 @@ class Bot( SingleServerIRCBot ):
 		"""
 		if reload:
 			self.__reload_config()
-		if self.modules_dict:
-			for module in self.modules_dict:
-				try:
-					self.modules_dict[module].stop()
-				except Exception as e:
-					print( 'Failed to stop module {0}: {1}'.format( module, e ) )
-		self.modules_dict = {}
-		for module in modules.getmodules():
-			try:
-				self.__add_module( module, reload )
-			except Exception, e:
-				print( "Failed loading module '{0}': {1}".format( module, e ) )
+		for module_name in self.modules.get_loaded_modules().iterkeys():
+			self.modules.disable_module( module_name )
+		for module_name in self.modules.get_available_modules():
+			self.modules.enable_module( module_name )
 
 	def __add_module( self, module, reload = False ):
 		"""Add named module to loaded modules.
@@ -144,13 +135,7 @@ class Bot( SingleServerIRCBot ):
 		module: the name of the module
 		reload: force reload of the module
 		"""
-		if reload:
-			modules.reload_module( module )
-		try:
-			cfg = self.config.items( module )
-		except ConfigParser.NoSectionError:
-			cfg = {}
-		self.modules_dict[ module ] = modules.getmodule( module )( cfg, self )
+		self.modules.reload_module( module )
 
 	def sigint_handler( self, signal, frame ):
 		"""Handle SIGINT to shutdown gracefully with Ctrl+C"""
@@ -300,7 +285,14 @@ class Bot( SingleServerIRCBot ):
 		print( "on_pubmsg" )
 		self.on_privmsg( c, e )
 
-	def save_setting( self, group, key, value ):
-		pass
-	def load_setting( self, group, key ):
-		pass
+	def get_config( self, group, key ):
+		resultset = self.db.execute( 'select `value` from config where `group` = {0} and `key` = {1}'.format( prepare( group ), prepare( key ) ) )
+		value = resultset.fetchone()[0]
+		return value
+
+	def set_config( self, group, key, value ):
+		cursor = self.db.cursor()
+		cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( {0}, {1}, {2} )'.format( prepare( group ), prepare( key ), prepare( value ) ) )
+		cursor.close()
+		self.db.commit()
+		
