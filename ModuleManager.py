@@ -13,12 +13,14 @@ class ModuleManager( object ):
 			self.remove_module( module_name )
 
 	def reload_modules( self ):
-		# add modules that are not added yet
-		for module_name in [ m for m in modules.get_modules() if m not in self.modules ]:
-			self.add_module( module_name )
 		# remove modules that no longer exist
 		for module_name in [ m for m in self.modules.iterkeys() if m not in modules.get_modules() ]:
 			self.remove_module( module_name )
+		# reload all modules
+		#for module_name in [ m for m in modules.get_modules() if m in self.modules ]:
+		# add modules that are not added yet
+		for module_name in [ m for m in modules.get_modules() if m not in self.modules ]:
+			self.add_module( module_name )
 
 	def get_modules( self ):
 		"""Get all found modules"""
