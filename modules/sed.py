@@ -7,8 +7,8 @@ class sed( _module ):
 		self.buffer = []
 		self.buffer_max = 100
 	
-	def on_privmsg( self, bot, source, target, message ):
-		m = re.match( 's/(?P<from>[^/]+)/(?P<to>.*)/?$', message )
+	def on_privmsg( self, source, target, message ):
+		m = re.match( 's/(?P<from>[^/]+)/(?P<to>.*)/$', message )
 		if m:
 			for item in self.buffer:
 				if re.search( m.group('from'), item['message'] ):
