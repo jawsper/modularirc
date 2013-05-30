@@ -12,7 +12,7 @@ class NsApiException(Exception):
 	pass
 
 class ns( _module ):
-	"""Bot module to use the NS (Nederlandse Spoorwegen) API"""
+	"""ns: Bot module to use the NS (Nederlandse Spoorwegen) API"""
 	def __init__( self, mgr ):
 		super( ns, self ).__init__( mgr )
 		self.username = self.password = None
@@ -28,14 +28,8 @@ class ns( _module ):
 		except Exception as e:
 			print( 'Loading stations failed: {0}'.format( e ) )
 		
-	def can_handle( self, cmd, admin ):
-		return self.username and self.password and cmd == 'ns'
-	
-	def handle( self, cmd, args, source, target, admin ):
-		if not self.username and self.password:
-			return
-		if cmd == 'help':
-			return [ '!ns <command>: search train connections (send !ns help for more details)' ]
+	def cmd_ns( self, args, source, target, admin ):
+		"""!ns <command>: search train connections (send !ns help for more details)"""
 		if len( args ) > 0 and args[0] != 'help':
 			try:
 				subcmd = args[0]

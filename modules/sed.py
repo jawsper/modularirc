@@ -2,6 +2,7 @@ from _module import _module
 import re
 
 class sed( _module ):
+	"""sed: implements sed's s// partially."""
 	def __init__( self, mgr ):
 		super( sed, self ).__init__( mgr )
 		self.buffer = []
