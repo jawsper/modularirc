@@ -128,7 +128,10 @@ class Bot( SingleServerIRCBot ):
 		handler = 'on_' + handler
 		for module in self.modules.get_loaded_modules().itervalues():
 			if hasattr( module, handler ):
-				getattr( module, handler )( *args )
+				try:
+					getattr( module, handler )( *args )
+				except Exception as e:
+					print( 'Module handler {0} failed: {1}'.format( handler, e ) )
 
 	def __process_command( self, c, e ):
 		"""Process a message coming from the server."""
@@ -204,25 +207,57 @@ class Bot( SingleServerIRCBot ):
 				return
 		
 		if cmd == 'help':
-			self.notice( target, '!help: this help text' )
-		elif admin and cmd == 'admin_help':
-			self.notice( source, '!die:                                   kill the bot' )
-			self.notice( source, '!raw:                                   send raw irc command' )
-			self.notice( source, '!admins:                                see who are admin' )
-			self.notice( source, '!restart_class:                         restart the main Bot class' )
-			self.notice( source, '!available_modules:                     see modules that are not currently loaded' )
-			self.notice( source, '!enable_module <module>[ <module>...]:  enable one or more modules' )
-			self.notice( source, '!disable_module <module>[ <module>...]: disable one or more modules' )
+			if len( args ) > 0:
+				if args[0] == 'module':
+					if len( args ) < 2:
+						pass
+					elif args[1] in self.modules.get_loaded_modules():
+						module = self.modules.get_loaded_modules()[ args[1] ]
+						self.notice( target, module.__doc__ )
+				else:
+					for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
+						if module.has_cmd( args[0] ):
+							self.notice( target, module.get_cmd( args[0] ).__doc__ )
+			else:
+				self.notice( target, '!help: this help text (send !help <command> for command help, send !help module <module> for module help)' )
+				for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
+					cmds = module.get_cmd_list()
+					self.notice( target, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) if len( cmds ) > 0 else 'No commands' ) )
 
-		for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
-			try:
-				if cmd == 'help' or module.can_handle( cmd, admin ):
-					lines = module.handle( cmd, args, source, target, admin )
-					if lines:
-						for line in lines:
-							self.notice( target, line )
-			except Exception as e:
-				print( "Module '{0}' handle error: {1}".format( module_name, e ) )
+		elif admin and cmd == 'admin_help':
+			if len( args ) > 0:
+				for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
+					if module.has_admin_cmd( args[0] ):
+						self.notice( source, module.get_admin_cmd( args[0] ).__doc__ )
+			else:
+				self.notice( source, '!admin_help: this help text (send !admin_help <command> for command help' )
+				self.notice( source, '!die:                                   kill the bot' )
+				self.notice( source, '!raw:                                   send raw irc command' )
+				self.notice( source, '!admins:                                see who are admin' )
+				self.notice( source, '!restart_class:                         restart the main Bot class' )
+				self.notice( source, '!available_modules:                     see modules that are not currently loaded' )
+				self.notice( source, '!reload_module <module>[ <module>...]:  reload one or more modules' )
+				self.notice( source, '!enable_module <module>[ <module>...]:  enable one or more modules' )
+				self.notice( source, '!disable_module <module>[ <module>...]: disable one or more modules' )
+				for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
+					cmds = module.get_admin_cmd_list()
+					if len( cmds ) > 0:
+						self.notice( source, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) ) )
+		else:
+			for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
+				try:
+					if module.has_cmd( cmd ):
+						lines = module.get_cmd( cmd )( args, source, target, admin )
+						if lines:
+							for line in lines:
+								self.notice( target, line )
+					elif admin and module.has_admin_cmd( cmd ):
+						lines = module.get_admin_cmd( cmd )( args, source, target, admin )
+						if lines:
+							for line in lines:
+								self.notice( source, line )
+				except Exception as e:
+					print( "Module '{0}' handle error: {1}".format( module_name, e ) )
 
 	def on_privmsg( self, c, e ):
 		#print( "on_privmsg" )

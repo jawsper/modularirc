@@ -26,3 +26,6 @@ def reload_module( module ):
 		reload( getattr( sys.modules[ __name__ ], module ) )
 	except AttributeError:
 		pass
+
+class ModuleLoadException( Exception ):
+	pass

@@ -12,6 +12,20 @@ class _module( object ):
 	def handle( self, cmd, args, source, target, admin ):
 		pass
 		
+	def get_cmd_list( self ):
+		return [ '!{0}'.format( cmd[ len( 'cmd_' ) : ] ) for cmd in dir( self ) if cmd.startswith( 'cmd_' ) ]
+	def has_cmd( self, cmd ):
+		return hasattr( self, 'cmd_{0}'.format( cmd ) )
+	def get_cmd( self, cmd ):
+		return getattr( self, 'cmd_{0}'.format( cmd ) )
+
+	def get_admin_cmd_list( self ):
+		return [ '!{0}'.format( cmd[ len( 'admin_cmd_' ) : ] ) for cmd in dir( self ) if cmd.startswith( 'admin_cmd_' ) ]
+	def has_admin_cmd( self, cmd ):
+		return hasattr( self, 'admin_cmd_{0}'.format( cmd ) )
+	def get_admin_cmd( self, cmd ):
+		return getattr( self, 'admin_cmd_{0}'.format( cmd ) )
+		
 	# methods that directly call the mgr
 
 	def notice( self, target, message ):

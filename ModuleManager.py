@@ -6,18 +6,20 @@ class ModuleManager( object ):
 		self.modules = {}
 		self.loaded_modules = {}
 		for module_name in modules.get_modules():
-			self.add_module( module_name )
+			print( 'Adding {0}: {1}'.format( module_name, self.add_module( module_name ) ) )
 
 	def unload( self ):
 		for module_name in self.modules.keys():
 			self.remove_module( module_name )
 
 	def reload_modules( self ):
+		"""Reload all modules. Warning: this is fairly destructive"""
 		# remove modules that no longer exist
 		for module_name in [ m for m in self.modules.iterkeys() if m not in modules.get_modules() ]:
 			self.remove_module( module_name )
 		# reload all modules
-		#for module_name in [ m for m in modules.get_modules() if m in self.modules ]:
+		for module_name in self.modules:
+			self.reload_module( module_name )
 		# add modules that are not added yet
 		for module_name in [ m for m in modules.get_modules() if m not in self.modules ]:
 			self.add_module( module_name )
@@ -81,13 +83,23 @@ class ModuleManager( object ):
 		del self.loaded_modules[ module_name ]
 		return 'Module disabled'
 
-	def reload_module( self, module_name ):
-		"""Reload a module"""
+	def restart_module( self, module_name ):
+		"""Restart a module"""
 		if not module_name in self.modules:
 			return 'Module not available'
 		if module_name in self.loaded_modules:
 			self.disable_module( module_name )
 		self.enable_module( module_name )
+		return 'Module restarted'
+	
+	def reload_module( self, module_name ):
+		"""Reload a module"""
+		start_module = module_name in self.loaded_modules
+		self.remove_module( module_name ) # remove to clear references
+		modules.reload_module( module_name ) # actually reload class
+		self.add_module( module_name ) # re-add module
+		if start_module: # enable if it was enabled
+			self.enable_module( module_name )
 		return 'Module reloaded'
 
 	# methods from Bot
