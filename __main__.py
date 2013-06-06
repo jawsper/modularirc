@@ -10,8 +10,7 @@ import Bot
 import logging
 	
 if __name__ == '__main__':
-	logging.basicConfig( level = logging.DEBUG, format = '[%(asctime)s] %(levelname)s: %(message)s' )
-	logging.getLogger().addHandler( logging.FileHandler( 'ircbot.log' ) )
+	logging.basicConfig( filename = 'ircbot.log', level = logging.DEBUG, format = '[%(asctime)s] %(levelname)s: %(message)s' )
 	logging.info( "Welcome to botje" )
 	fork = True
 	if len( sys.argv ) > 1:
