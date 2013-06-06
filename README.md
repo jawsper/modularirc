@@ -15,15 +15,3 @@ nickname=$nickname
 admin=$admin([;$other_admin)*
 admin_channels=$channel[;$channel ...]
 </pre>
-
-======
-For the modules:
-<pre>
-[google]
-api_key=
-cx=
-
-[ns]
-username=
-password=
-</pre>
