@@ -1,9 +1,11 @@
+import logging
+
 class _module( object ):
 	def __init__( self, manager ):
 		self.mgr = manager
-		print( 'Loading module {0}'.format( self.__class__.__name__ ) )
+		logging.debug( 'Loading module {0}'.format( self.__class__.__name__ ) )
 	def __del__( self ):
-		print( 'Module {0} is being unloaded'.format( self.__class__.__name__ ) )
+		logging.debug( 'Module {0} is being unloaded'.format( self.__class__.__name__ ) )
 		self.stop()
 	def stop( self ):
 		pass

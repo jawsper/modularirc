@@ -1,4 +1,3 @@
-from __future__ import print_function
 import ConfigParser, sys, os, signal, subprocess
 import datetime,time
 from ircbot import SingleServerIRCBot
@@ -6,16 +5,12 @@ from irclib import nm_to_n, nm_to_uh, is_channel
 import socket
 import modules
 import sqlite3
+import logging
 
 from ModuleManager import ModuleManager
 
 class BotReloadException(Exception):
 	pass
-
-def print( *args ):
-	sys.stdout.write( datetime.datetime.now().strftime( '[%H:%M:%S.%f] ' ) )
-	sys.stdout.write( *args )
-	sys.stdout.write( '\n' )
 
 class Bot( SingleServerIRCBot ):
 	"""The main brain of the IRC bot."""
@@ -47,7 +42,7 @@ class Bot( SingleServerIRCBot ):
 			try:
 				port = int( s[1] )
 			except ValueError:
-				print( "Error: Erroneous port." )
+				logging.error( "Error: Erroneous port." )
 				sys.exit(1)
 		else:
 			port = 6667
@@ -76,7 +71,7 @@ class Bot( SingleServerIRCBot ):
 		self._connect()
 		
 		if not self.connection.connected:
-			print( 'Failed to connect' )
+			logging.error( 'Failed to connect' )
 			return False
 		
 		self.last_ping = None
@@ -85,10 +80,11 @@ class Bot( SingleServerIRCBot ):
 			try:
 				self.connection.process_data()
 			except socket.timeout:
-				print( 'Socket timeout' )
+				logging.debug( 'Socket timeout' )
 				return False
 			except BotReloadException as e:
 				self.connection.disconnect( "Reloading bot..." )
+				self.modules.unload()
 				raise e
 			#except Exception as e:
 			#	raise e
@@ -96,12 +92,13 @@ class Bot( SingleServerIRCBot ):
 			
 	
 	def die( self ):
+		logging.debug( 'die()' )
 		self.modules.unload()
 		SingleServerIRCBot.die(self)
 
 	def sigint_handler( self, signal, frame ):
 		"""Handle SIGINT to shutdown gracefully with Ctrl+C"""
-		print( 'Ctrl+C pressed, shutting down!' )
+		logging.debug( 'Ctrl+C pressed, shutting down!' )
 		self.die()
 		sys.exit(0)
 
@@ -109,7 +106,7 @@ class Bot( SingleServerIRCBot ):
 		if self.last_msg > 0:
 			if time.time() < self.last_msg + self.msg_flood_limit:
 				sleep_time = self.last_msg + self.msg_flood_limit - time.time()
-				print( 'Need to sleep for {0}'.format( sleep_time ) )
+				logging.debug( 'Need to sleep for {0}'.format( sleep_time ) )
 				time.sleep( sleep_time )
 		self.last_msg = time.time()
 		
@@ -131,7 +128,7 @@ class Bot( SingleServerIRCBot ):
 				try:
 					getattr( module, handler )( *args )
 				except Exception as e:
-					print( 'Module handler {0} failed: {1}'.format( handler, e ) )
+					logging.debug( 'Module handler {0} failed: {1}', handler, e )
 
 	def __process_command( self, c, e ):
 		"""Process a message coming from the server."""
@@ -156,7 +153,7 @@ class Bot( SingleServerIRCBot ):
 			target = source
 
 		# see if there is a module that is willing to handle this, and make it so.
-		print( '__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})'.format( source, target, cmd, args, admin ) )
+		logging.debug( '__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})'.format( source, target, cmd, args, admin ) )
 
 		# handle die outside of module (in case module is dead :( )
 		if admin:
@@ -257,7 +254,7 @@ class Bot( SingleServerIRCBot ):
 							for line in lines:
 								self.notice( source, line )
 				except Exception as e:
-					print( "Module '{0}' handle error: {1}".format( module_name, e ) )
+					logging.warning( "Module '{0}' handle error: {1}".format( module_name, e ) )
 
 	def on_privmsg( self, c, e ):
 		#print( "on_privmsg" )
@@ -287,11 +284,11 @@ class Bot( SingleServerIRCBot ):
 
 	def on_nicknameinuse( self, c, e ):
 		"""Gets called if the server complains about the name being in use. Tries to set the nick to nick + '_'"""
-		print( "on_nicknameinuse" )
+		logging.debug( "on_nicknameinuse" )
 		c.nick( c.get_nickname() + "_" )
 
 	def on_welcome( self, c, e ):
-		print( "on_welcome" )
+		logging.debug( "on_welcome" )
 		c.join( self.channel )
 
 	def get_config( self, group, key = None ):

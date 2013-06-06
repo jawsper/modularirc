@@ -1,4 +1,5 @@
 import modules
+import logging
 
 class ModuleManager( object ):
 	def __init__( self, bot ):
@@ -6,11 +7,11 @@ class ModuleManager( object ):
 		self.modules = {}
 		self.loaded_modules = {}
 		for module_name in modules.get_modules():
-			print( 'Adding {0}: {1}'.format( module_name, self.add_module( module_name ) ) )
+			logging.debug( 'Loading module {0}: {1}'.format( module_name, self.add_module( module_name ) ) )
 
 	def unload( self ):
 		for module_name in self.modules.keys():
-			self.remove_module( module_name )
+			logging.debug( 'Unloading module {0}: {1}'.format( module_name, self.remove_module( module_name ) ) )
 
 	def reload_modules( self ):
 		"""Reload all modules. Warning: this is fairly destructive"""
@@ -79,7 +80,7 @@ class ModuleManager( object ):
 		try:
 			self.loaded_modules[ module_name ].stop()
 		except Exception as e:
-			pass
+			logger.warning( 'Error stopping module: {0}', e )
 		del self.loaded_modules[ module_name ]
 		return 'Module disabled'
 
