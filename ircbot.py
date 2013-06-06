@@ -25,7 +25,6 @@ write simpler bots.
 """
 
 import sys
-from UserDict import UserDict
 
 from irclib import SimpleIRCClient
 from irclib import nm_to_n, irc_lower, all_events
@@ -95,7 +94,9 @@ class SingleServerIRCBot(SimpleIRCClient):
                          self._nickname,
                          password,
                          ircname=self._realname,
-                         ipv6=self._ipv6)
+                         ipv6=self._ipv6,
+                         timeout = 5 * 60 # 5 minutes
+                        )
         except ServerConnectionError:
             pass
 
@@ -162,7 +163,7 @@ class SingleServerIRCBot(SimpleIRCClient):
         """[Internal]"""
         before = nm_to_n(e.source())
         after = e.target()
-        for ch in self.channels.values():
+        for ch in list(self.channels.values()):
             if ch.has_user(before):
                 ch.change_nick(before, after)
 
@@ -179,7 +180,7 @@ class SingleServerIRCBot(SimpleIRCClient):
     def _on_quit(self, c, e):
         """[Internal]"""
         nick = nm_to_n(e.source())
-        for ch in self.channels.values():
+        for ch in list(self.channels.values()):
             if ch.has_user(nick):
                 ch.remove_user(nick)
 
@@ -249,7 +250,7 @@ class SingleServerIRCBot(SimpleIRCClient):
         SimpleIRCClient.start(self)
 
 
-class IRCDict:
+class IRCDict(dict):
     """A dictionary suitable for storing IRC-related things.
 
     Dictionary keys a and b are considered equal if and only if
@@ -257,57 +258,13 @@ class IRCDict:
 
     Otherwise, it should behave exactly as a normal dictionary.
     """
-
-    def __init__(self, dict=None):
-        self.data = {}
-        self.canon_keys = {}  # Canonical keys
-        if dict is not None:
-            self.update(dict)
-    def __repr__(self):
-        return repr(self.data)
-    def __cmp__(self, dict):
-        if isinstance(dict, IRCDict):
-            return cmp(self.data, dict.data)
-        else:
-            return cmp(self.data, dict)
-    def __len__(self):
-        return len(self.data)
-    def __getitem__(self, key):
-        return self.data[self.canon_keys[irc_lower(key)]]
-    def __setitem__(self, key, item):
-        if key in self:
-            del self[key]
-        self.data[key] = item
-        self.canon_keys[irc_lower(key)] = key
-    def __delitem__(self, key):
-        ck = irc_lower(key)
-        del self.data[self.canon_keys[ck]]
-        del self.canon_keys[ck]
-    def __iter__(self):
-        return iter(self.data)
-    def __contains__(self, key):
-        return self.has_key(key)
-    def clear(self):
-        self.data.clear()
-        self.canon_keys.clear()
-    def copy(self):
-        if self.__class__ is UserDict:
-            return UserDict(self.data)
-        import copy
-        return copy.copy(self)
-    def keys(self):
-        return self.data.keys()
-    def items(self):
-        return self.data.items()
-    def values(self):
-        return self.data.values()
-    def has_key(self, key):
-        return irc_lower(key) in self.canon_keys
-    def update(self, dict):
-        for k, v in dict.items():
-            self.data[k] = v
-    def get(self, key, failobj=None):
-        return self.data.get(key, failobj)
+	
+    def __init__( self, *args ):
+        dict.__init__( self, *args )
+    def __get_item__( self, key ):
+        return dict.__get_item__( self, irc_lower( key ) )
+    def __set_item__( self, key, val ):
+        dict.__set_item__( self, irc_lower( key ), val )
 
 
 class Channel:
@@ -324,16 +281,16 @@ class Channel:
 
     def users(self):
         """Returns an unsorted list of the channel's users."""
-        return self.userdict.keys()
+        return list(self.userdict.keys())
 
     def opers(self):
         """Returns an unsorted list of the channel's operators."""
-        return self.operdict.keys()
+        return list(self.operdict.keys())
 
     def voiced(self):
         """Returns an unsorted list of the persons that have voice
         mode set in the channel."""
-        return self.voiceddict.keys()
+        return list(self.voiceddict.keys())
 
     def has_user(self, nick):
         """Check whether the channel has a user."""

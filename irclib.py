@@ -207,8 +207,8 @@ class IRC:
         incoming data, if there are any.  If that seems boring, look
         at the process_forever method.
         """
-        sockets = map(lambda x: x._get_socket(), self.connections)
-        sockets = filter(lambda x: x != None, sockets)
+        sockets = [x._get_socket() for x in self.connections]
+        sockets = [x for x in sockets if x != None]
         if sockets:
             (i, o, e) = select.select(sockets, [], [], timeout)
             self.process_data(i)
@@ -342,7 +342,7 @@ class Connection:
         self.irclibobj = irclibobj
 
     def _get_socket():
-        raise IRCError, "Not overridden"
+        raise IRCError("Not overridden")
 
     ##############################
     ### Convenience wrappers.
@@ -379,7 +379,7 @@ class ServerConnection(Connection):
         self.ssl = None
 
     def connect(self, server, port, nickname, password=None, username=None,
-                ircname=None, localaddress="", localport=0, ssl=False, ipv6=False):
+                ircname=None, localaddress="", localport=0, ssl=False, ipv6=False, timeout = 300 ):
         """Connect/reconnect to a server.
 
         Arguments:
@@ -403,6 +403,8 @@ class ServerConnection(Connection):
             ssl -- Enable support for ssl.
 
             ipv6 -- Enable support for ipv6.
+
+            timeout -- socket timeout in seconds
 
         This function can be called to reconnect a closed connection.
 
@@ -429,15 +431,15 @@ class ServerConnection(Connection):
         else:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            self.socket.settimeout( 300 )
+            self.socket.settimeout( timeout )
             self.socket.bind((self.localaddress, self.localport))
             self.socket.connect((self.server, self.port))
             if ssl:
                 self.ssl = socket.ssl(self.socket)
-        except socket.error, x:
+        except socket.error as x:
             self.socket.close()
             self.socket = None
-            raise ServerConnectionError, "Couldn't connect to socket: %s" % x
+            raise ServerConnectionError("Couldn't connect to socket: %s" % x)
         self.connected = 1
         if self.irclibobj.fn_to_add_socket:
             self.irclibobj.fn_to_add_socket(self.socket)
@@ -489,10 +491,10 @@ class ServerConnection(Connection):
 
         try:
             if self.ssl:
-                new_data = self.ssl.read(2**14)
+                new_data = self.ssl.read(2**14).decode( 'utf-8' )
             else:
-                new_data = self.socket.recv(2**14)
-        except socket.error, x:
+                new_data = self.socket.recv(2**14).decode( 'utf-8' )
+        except socket.error as x:
             # The server hung up.
             self.disconnect("Connection reset by peer")
             return
@@ -508,7 +510,7 @@ class ServerConnection(Connection):
 
         for line in lines:
             if DEBUG:
-                print "FROM SERVER:", line
+                print("FROM SERVER:", line)
 
             if not line:
                 continue
@@ -562,7 +564,7 @@ class ServerConnection(Connection):
                         command = "privnotice"
 
                 for m in messages:
-                    if type(m) is types.TupleType:
+                    if type(m) is tuple:
                         if command in ["privmsg", "pubmsg"]:
                             command = "ctcp"
                         else:
@@ -570,15 +572,15 @@ class ServerConnection(Connection):
 
                         m = list(m)
                         if DEBUG:
-                            print "command: %s, source: %s, target: %s, arguments: %s" % (
-                                command, prefix, target, m)
+                            print("command: %s, source: %s, target: %s, arguments: %s" % (
+                                command, prefix, target, m))
                         self._handle_event(Event(command, prefix, target, m))
                         if command == "ctcp" and m[0] == "ACTION":
                             self._handle_event(Event("action", prefix, target, m[1:]))
                     else:
                         if DEBUG:
-                            print "command: %s, source: %s, target: %s, arguments: %s" % (
-                                command, prefix, target, [m])
+                            print("command: %s, source: %s, target: %s, arguments: %s" % (
+                                command, prefix, target, [m]))
                         self._handle_event(Event(command, prefix, target, [m]))
             else:
                 target = None
@@ -596,8 +598,8 @@ class ServerConnection(Connection):
                         command = "umode"
 
                 if DEBUG:
-                    print "command: %s, source: %s, target: %s, arguments: %s" % (
-                        command, prefix, target, arguments)
+                    print("command: %s, source: %s, target: %s, arguments: %s" % (
+                        command, prefix, target, arguments))
                 self._handle_event(Event(command, prefix, target, arguments))
 
     def _handle_event(self, event):
@@ -661,7 +663,7 @@ class ServerConnection(Connection):
 
         try:
             self.socket.close()
-        except socket.error, x:
+        except socket.error as x:
             pass
         self.socket = None
         self._handle_event(Event("disconnect", self.server, "", [message]))
@@ -744,7 +746,7 @@ class ServerConnection(Connection):
 
     def part(self, channels, message=""):
         """Send a PART command."""
-        if type(channels) == types.StringType:
+        if type(channels) == bytes:
             self.send_raw("PART " + channels + (message and (" " + message)))
         else:
             self.send_raw("PART " + ",".join(channels) + (message and (" " + message)))
@@ -783,15 +785,15 @@ class ServerConnection(Connection):
         The string will be padded with appropriate CR LF.
         """
         if self.socket is None:
-            raise ServerNotConnectedError, "Not connected."
+            raise ServerNotConnectedError("Not connected.")
         try:
             if self.ssl:
                 self.ssl.write(string + "\r\n")
             else:
-                self.socket.send(string + "\r\n")
+                self.socket.send( bytes( string + "\r\n", 'utf-8' ) )
             if DEBUG:
-                print "TO SERVER:", string
-        except socket.error, x:
+                print("TO SERVER:", string)
+        except socket.error as x:
             # Ouch!
             self.disconnect("Connection reset by peer.")
 
@@ -889,8 +891,8 @@ class DCCConnection(Connection):
         self.passive = 0
         try:
             self.socket.connect((self.peeraddress, self.peerport))
-        except socket.error, x:
-            raise DCCConnectionError, "Couldn't connect to socket: %s" % x
+        except socket.error as x:
+            raise DCCConnectionError("Couldn't connect to socket: %s" % x)
         self.connected = 1
         if self.irclibobj.fn_to_add_socket:
             self.irclibobj.fn_to_add_socket(self.socket)
@@ -914,8 +916,8 @@ class DCCConnection(Connection):
             self.socket.bind((socket.gethostbyname(socket.gethostname()), 0))
             self.localaddress, self.localport = self.socket.getsockname()
             self.socket.listen(10)
-        except socket.error, x:
-            raise DCCConnectionError, "Couldn't bind socket: %s" % x
+        except socket.error as x:
+            raise DCCConnectionError("Couldn't bind socket: %s" % x)
         return self
 
     def disconnect(self, message=""):
@@ -931,7 +933,7 @@ class DCCConnection(Connection):
         self.connected = 0
         try:
             self.socket.close()
-        except socket.error, x:
+        except socket.error as x:
             pass
         self.socket = None
         self.irclibobj._handle_event(
@@ -948,8 +950,8 @@ class DCCConnection(Connection):
             self.socket = conn
             self.connected = 1
             if DEBUG:
-                print "DCC connection from %s:%d" % (
-                    self.peeraddress, self.peerport)
+                print("DCC connection from %s:%d" % (
+                    self.peeraddress, self.peerport))
             self.irclibobj._handle_event(
                 self,
                 Event("dcc_connect", self.peeraddress, None, None))
@@ -957,7 +959,7 @@ class DCCConnection(Connection):
 
         try:
             new_data = self.socket.recv(2**14)
-        except socket.error, x:
+        except socket.error as x:
             # The server hung up.
             self.disconnect("Connection reset by peer")
             return
@@ -986,11 +988,11 @@ class DCCConnection(Connection):
         target = None
         for chunk in chunks:
             if DEBUG:
-                print "FROM PEER:", chunk
+                print("FROM PEER:", chunk)
             arguments = [chunk]
             if DEBUG:
-                print "command: %s, source: %s, target: %s, arguments: %s" % (
-                    command, prefix, target, arguments)
+                print("command: %s, source: %s, target: %s, arguments: %s" % (
+                    command, prefix, target, arguments))
             self.irclibobj._handle_event(
                 self,
                 Event(command, prefix, target, arguments))
@@ -1010,8 +1012,8 @@ class DCCConnection(Connection):
             if self.dcctype == "chat":
                 self.socket.send("\n")
             if DEBUG:
-                print "TO PEER: %s\n" % string
-        except socket.error, x:
+                print("TO PEER: %s\n" % string)
+        except socket.error as x:
             # Ouch!
             self.disconnect("Connection reset by peer.")
 
@@ -1053,7 +1055,7 @@ class SimpleIRCClient:
         self.dcc_connections.remove(c)
 
     def connect(self, server, port, nickname, password=None, username=None,
-                ircname=None, localaddress="", localport=0, ssl=False, ipv6=False):
+                ircname=None, localaddress="", localport=0, ssl=False, ipv6=False, timeout = 300 ):
         """Connect/reconnect to a server.
 
         Arguments:
@@ -1078,11 +1080,13 @@ class SimpleIRCClient:
 
             ipv6 -- Enable support for ipv6.
 
+            timeout -- socket timeout in seconds
+
         This function can be called to reconnect a closed connection.
         """
         self.connection.connect(server, port, nickname,
                                 password, username, ircname,
-                                localaddress, localport, ssl, ipv6)
+                                localaddress, localport, ssl, ipv6, timeout )
 
     def dcc_connect(self, address, port, dcctype="chat"):
         """Connect to a DCC peer.
@@ -1184,7 +1188,7 @@ def mask_matches(nick, mask):
 
 _special = "-[]\\`^{}"
 nick_characters = string.ascii_letters + string.digits + _special
-_ircstring_translation = string.maketrans(string.ascii_uppercase + "[]\\^",
+_ircstring_translation = str.maketrans(string.ascii_uppercase + "[]\\^",
                                           string.ascii_lowercase + "{}|~")
 
 def irc_lower(s):
@@ -1260,16 +1264,16 @@ def ip_numstr_to_quad(num):
     """Convert an IP number as an integer given in ASCII
     representation (e.g. '3232235521') to an IP address string
     (e.g. '192.168.0.1')."""
-    n = long(num)
-    p = map(str, map(int, [n >> 24 & 0xFF, n >> 16 & 0xFF,
-                           n >> 8 & 0xFF, n & 0xFF]))
+    n = int(num)
+    p = list(map(str, list(map(int, [n >> 24 & 0xFF, n >> 16 & 0xFF,
+                           n >> 8 & 0xFF, n & 0xFF]))))
     return ".".join(p)
 
 def ip_quad_to_numstr(quad):
     """Convert an IP address string (e.g. '192.168.0.1') to an IP
     number as an integer given in ASCII representation
     (e.g. '3232235521')."""
-    p = map(long, quad.split("."))
+    p = list(map(int, quad.split(".")))
     s = str((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3])
     if s[-1] == "L":
         s = s[:-1]
@@ -1558,4 +1562,4 @@ protocol_events = [
     "pong",
 ]
 
-all_events = generated_events + protocol_events + numeric_events.values()
+all_events = generated_events + protocol_events + list(numeric_events.values())
