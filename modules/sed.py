@@ -11,6 +11,8 @@ class sed( _module ):
 		m = re.match( 's/(?P<from>[^/]+)/(?P<to>.*)/$', message )
 		if m:
 			for item in self.buffer:
+				if item + '/' == message: # fix for me typing the damn command wrong
+					continue
 				if re.search( m.group('from'), item['message'] ):
 					new_message = re.sub( m.group('from'), m.group('to'), item['message'] )
 					bot.privmsg( target, '<{0}> {1}'.format( item['source'], new_message ) )
