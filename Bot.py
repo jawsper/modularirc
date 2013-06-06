@@ -30,7 +30,7 @@ class Bot( SingleServerIRCBot ):
 		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
 		self.admin_channels = self.config.get( 'main', 'admin_channels' ).split( ';' )
 		
-		self.db = sqlite3.connect( os.path.join( os.path.dirname( __file__ ), 'ircbot.sqlite3' ) )
+		self.db = sqlite3.connect( os.path.join( os.path.dirname( __file__ ), 'ircbot.sqlite3' ), check_same_thread = False )
 		cursor = self.db.cursor()
 		try:
 			cursor.execute( 'select * from config limit 1' )
