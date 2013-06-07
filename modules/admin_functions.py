@@ -43,6 +43,32 @@ class admin_functions( _module ):
 	#			'!-o <args>: make someone not op',
 	#		):
 	#			self.notice( source, msg )
+	
+	def admin_cmd_op( self, args, source, target, admin ):
+		"""!op <+o|-o> <args>: make or break someone as op"""
+		if len( args ) == 0:
+			return [ self.admin_cmd_op.__doc__ ]
+		cmd = args[ 0 ]
+		args = args[ 1: ]
+		if cmd in ( '+o', '-o' ):
+			if len( args ) > 1:
+				dest = None
+				nicks = None
+				if args[0][0] == '#':
+					dest = args[0]
+					nicks = args[1:]
+				elif target[0] == '#':
+					dest = target
+					nicks = args
+				if dest != None:
+					for nick in nicks:
+						self.mgr.bot.connection.mode( dest, cmd + ' ' + nick )
+			elif len( args ) == 1 and args[0][0] == '#':
+				self.mgr.bot.connection.mode( args[0], cmd + ' ' + source )
+			elif target[0] == '#':
+				self.mgr.bot.connection.mode( target, cmd + ' ' + source )
+			else:
+				self.notice( source, "Usage: !op <+|->o [<#<channel>|nicknames>]" )
 
 	# handle update git
 	def admin_cmd_update_source( self, args, source, target, admin ):
