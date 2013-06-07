@@ -103,7 +103,7 @@ class Bot( SingleServerIRCBot ):
 	def __module_handle( self, handler, *args ):
 		"""Passed the "on_*" handlers through to the modules that support them"""
 		handler = 'on_' + handler
-		for module in self.modules.get_loaded_modules().values():
+		for ( _ , module ) in self.modules.get_loaded_modules():
 			if hasattr( module, handler ):
 				try:
 					getattr( module, handler )( *args )
@@ -156,22 +156,6 @@ class Bot( SingleServerIRCBot ):
 					self.notice( source, 'Set config setting' )
 				except Exception as e:
 					self.notice( source, 'Failed setting config setting: {0}'.format( e ) )
-			# modules commands
-			elif cmd == 'modules':
-				self.notice( source, 'Modules: {0}'.format( ', '.join( self.modules.get_modules() ) ) )
-			elif cmd == 'available_modules':
-				self.notice( source, 'Available modules: ' + ', '.join( self.modules.get_available_modules() ) )
-			elif cmd == 'reload_module' and len( args ) > 0:
-				for m in args:
-					self.notice( source, self.modules.reload_module( m ) )
-			elif cmd == 'reload_modules':
-				self.modules.reload_modules()
-			elif cmd == 'enable_module' and len( args ) > 0:
-				for m in args:
-					self.notice( source, self.modules.enable_module( m ) )
-			elif cmd == 'disable_module' and len( args ) > 0:
-				for m in args:
-					self.notice( source, self.modules.disable_module( m ) )
 			# other base admin commands
 			elif cmd == 'raw':
 				self.connection.send_raw( ' '.join( args ) )
@@ -188,22 +172,22 @@ class Bot( SingleServerIRCBot ):
 				if args[0] == 'module':
 					if len( args ) < 2:
 						pass
-					elif args[1] in self.modules.get_loaded_modules():
-						module = self.modules.get_loaded_modules()[ args[1] ]
+					elif self.modules.module_is_loaded( args[1] ):
+						module = self.modules.get_module( args[1] )
 						self.notice( target, module.__doc__ )
 				else:
-					for ( module_name, module ) in self.modules.get_loaded_modules().items():
+					for ( module_name, module ) in self.modules.get_loaded_modules():
 						if module.has_cmd( args[0] ):
 							self.notice( target, module.get_cmd( args[0] ).__doc__ )
 			else:
 				self.notice( target, '!help: this help text (send !help <command> for command help, send !help module <module> for module help)' )
-				for ( module_name, module ) in self.modules.get_loaded_modules().items():
+				for ( module_name, module ) in [ lst for lst in self.modules.get_loaded_modules() if not lst[1].admin_only ]:
 					cmds = module.get_cmd_list()
 					self.notice( target, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) if len( cmds ) > 0 else 'No commands' ) )
 
 		elif admin and cmd == 'admin_help':
 			if len( args ) > 0:
-				for ( module_name, module ) in self.modules.get_loaded_modules().items():
+				for ( module_name, module ) in self.modules.get_loaded_modules():
 					if module.has_admin_cmd( args[0] ):
 						self.notice( source, module.get_admin_cmd( args[0] ).__doc__ )
 			else:
@@ -216,12 +200,12 @@ class Bot( SingleServerIRCBot ):
 				self.notice( source, '!reload_module <module>[ <module>...]:  reload one or more modules' )
 				self.notice( source, '!enable_module <module>[ <module>...]:  enable one or more modules' )
 				self.notice( source, '!disable_module <module>[ <module>...]: disable one or more modules' )
-				for ( module_name, module ) in self.modules.get_loaded_modules().items():
+				for ( module_name, module ) in self.modules.get_loaded_modules():
 					cmds = module.get_admin_cmd_list()
 					if len( cmds ) > 0:
 						self.notice( source, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) ) )
 		else:
-			for ( module_name, module ) in self.modules.get_loaded_modules().items():
+			for ( module_name, module ) in self.modules.get_loaded_modules():
 				try:
 					if module.has_cmd( cmd ):
 						lines = module.get_cmd( cmd )( args, source, target, admin )

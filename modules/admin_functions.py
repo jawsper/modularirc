@@ -3,6 +3,9 @@ import os, subprocess
 
 class admin_functions( _module ):
 	"""admin_functions: special functions for admins"""
+	
+	def __init__( self, mgr ):
+		_module.__init__( self, mgr, admin_only = True )
 
 	#def handle( self, cmd, args, source, target, admin ):
 	#	if not admin:

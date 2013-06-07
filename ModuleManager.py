@@ -31,7 +31,15 @@ class ModuleManager( object ):
 
 	def get_loaded_modules( self ):
 		"""Get all loaded modules"""
-		return self.loaded_modules
+		return list( self.loaded_modules.items() )
+		
+	def module_is_loaded( self, module_name ):
+		return module_name in self.loaded_modules
+	def get_module( self, module_name ):
+		try:
+			return self.loaded_modules[ module_name ]
+		except:
+			return False
 
 	def get_available_modules( self ):
 		"""Get all available modules: modules that are found but not loaded"""
@@ -64,14 +72,14 @@ class ModuleManager( object ):
 	def enable_module( self, module_name ):
 		"""Enable a module"""
 		if not module_name in self.modules:
-			return 'Module not available'
+			return 'Module {} not available'.format( module_name )
 		if module_name in self.loaded_modules:
-			return 'Module already enabled'
+			return 'Module {} already enabled'.format( module_name )
 		try:
 			self.loaded_modules[ module_name ] = self.modules[ module_name ]( self )
 		except Exception as e:
-			return 'Module failed to load: {0}'.format( e )
-		return 'Module enabled'
+			raise Exception( 'Module {} failed to load: {}'.format( module_name, e ) )
+		return 'Module {} enabled'.format( module_name )
 
 	def disable_module( self, module_name ):
 		"""Disable a module"""
@@ -80,18 +88,18 @@ class ModuleManager( object ):
 		try:
 			self.loaded_modules[ module_name ].stop()
 		except Exception as e:
-			logger.warning( 'Error stopping module: {0}', e )
+			logger.warning( 'Module %s failed to stop: %s', module_name, e )
 		del self.loaded_modules[ module_name ]
-		return 'Module disabled'
+		return 'Module {} disabled'.format( module_name )
 
 	def restart_module( self, module_name ):
 		"""Restart a module"""
 		if not module_name in self.modules:
-			return 'Module not available'
+			return 'Module {} not available'.format( module_name )
 		if module_name in self.loaded_modules:
 			self.disable_module( module_name )
 		self.enable_module( module_name )
-		return 'Module restarted'
+		return 'Module {} restarted'.format( module_name )
 	
 	def reload_module( self, module_name ):
 		"""Reload a module"""
@@ -101,7 +109,7 @@ class ModuleManager( object ):
 		self.add_module( module_name ) # re-add module
 		if start_module: # enable if it was enabled
 			self.enable_module( module_name )
-		return 'Module reloaded'
+		return 'Module {} reloaded'.format( module_name )
 
 	# methods from Bot
 	
