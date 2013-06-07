@@ -9,10 +9,6 @@ class _module( object ):
 		self.stop()
 	def stop( self ):
 		pass
-	def can_handle( self, cmd, admin ):
-		return False
-	def handle( self, cmd, args, source, target, admin ):
-		pass
 		
 	def get_cmd_list( self ):
 		return [ '!{0}'.format( cmd[ len( 'cmd_' ) : ] ) for cmd in dir( self ) if cmd.startswith( 'cmd_' ) ]

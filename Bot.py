@@ -1,4 +1,4 @@
-import ConfigParser, sys, os, signal, subprocess
+import configparser, sys, os, signal, subprocess
 import datetime,time
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_uh, is_channel
@@ -19,7 +19,7 @@ class Bot( SingleServerIRCBot ):
 		self.msg_flood_limit = 0.25
 		
 		self.admin_channels = []
-		self.config = ConfigParser.SafeConfigParser()
+		self.config = configparser.SafeConfigParser()
 		self.config.read( os.path.expanduser( "~/.ircbot" ) )
 		
 		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
@@ -68,28 +68,8 @@ class Bot( SingleServerIRCBot ):
 		signal.signal( signal.SIGINT, self.sigint_handler )
 
 	def start( self ):
-		self._connect()
-		
-		if not self.connection.connected:
-			logging.error( 'Failed to connect' )
-			return False
-		
-		self.last_ping = None
-		self.ping_timeout = 3 * 60 # 3 minutes
-		while self.connection.connected:
-			try:
-				self.connection.process_data()
-			except socket.timeout:
-				logging.debug( 'Socket timeout' )
-				return False
-			except BotReloadException as e:
-				self.connection.disconnect( "Reloading bot..." )
-				self.modules.unload()
-				raise e
-			#except Exception as e:
-			#	raise e
-			#	print( 'Exception: {0}'.format( e ) )
-			
+		logging.debug( 'start()' )
+		SingleServerIRCBot.start( self )
 	
 	def die( self ):
 		logging.debug( 'die()' )
@@ -123,7 +103,7 @@ class Bot( SingleServerIRCBot ):
 	def __module_handle( self, handler, *args ):
 		"""Passed the "on_*" handlers through to the modules that support them"""
 		handler = 'on_' + handler
-		for module in self.modules.get_loaded_modules().itervalues():
+		for module in self.modules.get_loaded_modules().values():
 			if hasattr( module, handler ):
 				try:
 					getattr( module, handler )( *args )
@@ -153,7 +133,7 @@ class Bot( SingleServerIRCBot ):
 			target = source
 
 		# see if there is a module that is willing to handle this, and make it so.
-		logging.debug( '__process_command (src: {0}; tgt: {1}; cmd: {2}; args: {3}; admin: {4})'.format( source, target, cmd, args, admin ) )
+		logging.debug( '__process_command (src: %s; tgt: %s; cmd: %s; args: %s; admin: %s)', source, target, cmd, args, admin )
 
 		# handle die outside of module (in case module is dead :( )
 		if admin:
@@ -170,9 +150,9 @@ class Bot( SingleServerIRCBot ):
 					self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
 				except:
 					self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
-			elif cmd == 'set_config' and len( args ) == 3:
+			elif cmd == 'set_config' and len( args ) >= 3:
 				try:
-					self.set_config( *args )
+					self.set_config( args[0], args[1], ' '.join( args[ 2: ] ) )
 					self.notice( source, 'Set config setting' )
 				except Exception as e:
 					self.notice( source, 'Failed setting config setting: {0}'.format( e ) )
@@ -212,18 +192,18 @@ class Bot( SingleServerIRCBot ):
 						module = self.modules.get_loaded_modules()[ args[1] ]
 						self.notice( target, module.__doc__ )
 				else:
-					for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
+					for ( module_name, module ) in self.modules.get_loaded_modules().items():
 						if module.has_cmd( args[0] ):
 							self.notice( target, module.get_cmd( args[0] ).__doc__ )
 			else:
 				self.notice( target, '!help: this help text (send !help <command> for command help, send !help module <module> for module help)' )
-				for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
+				for ( module_name, module ) in self.modules.get_loaded_modules().items():
 					cmds = module.get_cmd_list()
 					self.notice( target, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) if len( cmds ) > 0 else 'No commands' ) )
 
 		elif admin and cmd == 'admin_help':
 			if len( args ) > 0:
-				for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
+				for ( module_name, module ) in self.modules.get_loaded_modules().items():
 					if module.has_admin_cmd( args[0] ):
 						self.notice( source, module.get_admin_cmd( args[0] ).__doc__ )
 			else:
@@ -236,12 +216,12 @@ class Bot( SingleServerIRCBot ):
 				self.notice( source, '!reload_module <module>[ <module>...]:  reload one or more modules' )
 				self.notice( source, '!enable_module <module>[ <module>...]:  enable one or more modules' )
 				self.notice( source, '!disable_module <module>[ <module>...]: disable one or more modules' )
-				for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
+				for ( module_name, module ) in self.modules.get_loaded_modules().items():
 					cmds = module.get_admin_cmd_list()
 					if len( cmds ) > 0:
 						self.notice( source, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) ) )
 		else:
-			for ( module_name, module ) in self.modules.get_loaded_modules().iteritems():
+			for ( module_name, module ) in self.modules.get_loaded_modules().items():
 				try:
 					if module.has_cmd( cmd ):
 						lines = module.get_cmd( cmd )( args, source, target, admin )
@@ -264,7 +244,12 @@ class Bot( SingleServerIRCBot ):
 		message = e.arguments()[0]
 		
 		self.__module_handle( 'privmsg', source, target, message )
-		self.__process_command( c, e )
+		try:
+			self.__process_command( c, e )
+		except BotReloadException as e:
+			raise e
+		except Exception as e:
+			logging.warning( 'Error in __process_command: %s', e )
 
 	def on_pubmsg( self, c, e ):
 		#print( "on_pubmsg" )
@@ -279,7 +264,7 @@ class Bot( SingleServerIRCBot ):
 	def on_namreply( self, c, e ):
 		chan = e.arguments()[1]
 		people = e.arguments()[2].split( ' ' )
-		ops = map( lambda p: p[1:], filter( lambda p: p[0] == '@', people ) )
+		ops = [ p[1:] for p in people if p[0] == '@' ]
 		self.channel_ops[ chan ] = ops
 
 	def on_nicknameinuse( self, c, e ):
@@ -293,6 +278,7 @@ class Bot( SingleServerIRCBot ):
 
 	def get_config( self, group, key = None ):
 		"""gets a config value"""
+		logging.debug( 'get config %s.%s', group, key )
 		if key == None:
 			resultset = self.db.execute( 'select `key`, `value` from config where `group` = :group', { 'group': group } )
 			values = {}
@@ -308,6 +294,7 @@ class Bot( SingleServerIRCBot ):
 
 	def set_config( self, group, key, value ):
 		"""sets a config value"""
+		logging.debug( 'set config %s.%s to "%s"', group, key, value )
 		cursor = self.db.cursor()
 		data = { 'group': group, 'key': key, 'value': value }
 		try:

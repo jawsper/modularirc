@@ -1,7 +1,7 @@
-from __future__ import print_function
+
 import os, json, pickle, re
-import httplib, urllib
-from _module import _module
+import http.client, urllib.request, urllib.parse, urllib.error
+from ._module import _module
 
 class google( _module ):
 	"""Bot module to search on google"""
@@ -41,10 +41,10 @@ class google( _module ):
 		query = ' '.join( args )
 
 		if not query in self.google_cache:
-			conn = httplib.HTTPSConnection( 'www.googleapis.com' )
+			conn = http.client.HTTPSConnection( 'www.googleapis.com' )
 			conn.request(
 				'GET',
-				'/customsearch/v1?' + urllib.urlencode({
+				'/customsearch/v1?' + urllib.parse.urlencode({
 					'cx': self.cx,
 					'key': self.api_key,
 					'q': query

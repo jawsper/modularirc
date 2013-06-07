@@ -1,4 +1,4 @@
-from _module import _module
+from ._module import _module
 import os, subprocess
 
 class admin_functions( _module ):
@@ -60,7 +60,7 @@ class admin_functions( _module ):
 	def admin_cmd_stats( self, args, source, target, admin ):
 		"""!stats: show statistics"""
 		stats = []
-		for chname, chobj in self.mgr.bot.channels.items():
+		for chname, chobj in list(self.mgr.bot.channels.items()):
 			stats.append( "--- Channel statistics ---" )
 			stats.append( "Channel: " + chname )
 			users = chobj.users()

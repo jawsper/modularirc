@@ -1,16 +1,15 @@
-#!/usr/bin/env python
-
-# MAKE IT UNICODE OK
-import sys
-reload( sys )
-sys.setdefaultencoding( 'utf-8' )
+#!/usr/bin/env python3
 
 import os, sys
 import Bot
 import logging
+
+from imp import reload
 	
 if __name__ == '__main__':
-	logging.basicConfig( filename = 'ircbot.log', level = logging.DEBUG, format = '[%(asctime)s] %(levelname)s: %(message)s' )
+	logging.basicConfig( 
+		#filename = 'ircbot.log', 
+		level = logging.DEBUG, format = '[%(asctime)s] %(levelname)s: %(message)s' )
 	logging.info( "Welcome to botje" )
 	fork = True
 	if len( sys.argv ) > 1:

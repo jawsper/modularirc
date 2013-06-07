@@ -1,12 +1,12 @@
-from __future__ import print_function
-import httplib, urllib
+
+import http.client, urllib.request, urllib.parse, urllib.error
 import xml.etree.ElementTree as ET
 import traceback
 import base64
 from datetime import datetime
 from dateutil.tz import tzlocal
 import dateutil.parser
-from _module import _module
+from ._module import _module
 
 class NsApiException(Exception):
 	pass
@@ -56,10 +56,10 @@ class ns( _module ):
 		]
 
 	def __apiquery( self, api_method, args = None ):
-		conn = httplib.HTTPConnection( 'webservices.ns.nl' )
+		conn = http.client.HTTPConnection( 'webservices.ns.nl' )
 		conn.request(
 			'GET',
-			'/{0}{1}'.format( api_method, '?' + urllib.urlencode( args ) if args and len( args ) > 0 else '' ),
+			'/{0}{1}'.format( api_method, '?' + urllib.parse.urlencode( args ) if args and len( args ) > 0 else '' ),
 			headers = { 'Authorization': 'Basic ' + base64.b64encode( '{0}:{1}'.format( self.username, self.password ) ) }
 		)
 		response = conn.getresponse()
@@ -111,7 +111,7 @@ class ns( _module ):
 		print( '__plan_route( {0} )'.format( args ) )
 		fromStation = toStation = viaStation = None
 		
-		args = map( lambda x: x.lower(), args )
+		args = [x.lower() for x in args]
 		
 		codes = []
 		
@@ -148,7 +148,7 @@ class ns( _module ):
 				args['viaStation'] = viaStation
 			
 			root = self.__apiquery( 'ns-api-treinplanner', args )
-		except NsApiException, e:
+		except NsApiException as e:
 			return [ str( e ) ]
 		
 		if root.tag == 'ReisMogelijkheden':
@@ -169,12 +169,11 @@ class ns( _module ):
 				curr = None
 				max_part_len = ( [ 0, 0, 0 ], [ 0, 0, 0 ] )
 				for reisdeel in rm.findall( 'ReisDeel' ):
-					stops = map( lambda x:
-						[
+					stops = [[
 							self.__parse_tijd( x.find( 'Tijd' ).text ),
 							x.find( 'Naam' ).text,
 							'sp ' + x.find( 'Spoor' ).text if x.find( 'Spoor' ) is not None else None
-						] if x is not None else None, reisdeel.findall( 'ReisStop' ) )
+						] if x is not None else None for x in reisdeel.findall( 'ReisStop' )]
 					a = stops[0]
 					b = stops[-1]
 					
@@ -207,7 +206,7 @@ class ns( _module ):
 	def __vertrektijden( self, station ):
 		try:
 			root = self.__apiquery( 'ns-api-avt', { 'station': station } )
-		except NsApiException, e:
+		except NsApiException as e:
 			return [ str(e) ]
 		if root.tag == 'ActueleVertrekTijden':
 			now = datetime.now(tzlocal())
@@ -235,7 +234,7 @@ class ns( _module ):
 	def __storingen( self, station ):
 		try:
 			root = self.__apiquery( 'ns-api-storingen', { 'station': station } )
-		except NsApiException, e:
+		except NsApiException as e:
 			return [ str(e) ]
 		
 		if root.tag == 'Storingen':

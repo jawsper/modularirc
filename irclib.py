@@ -491,9 +491,9 @@ class ServerConnection(Connection):
 
         try:
             if self.ssl:
-                new_data = self.ssl.read(2**14).decode( 'utf-8' )
+                new_data = self.ssl.read(2**14)
             else:
-                new_data = self.socket.recv(2**14).decode( 'utf-8' )
+                new_data = self.socket.recv(2**14)
         except socket.error as x:
             # The server hung up.
             self.disconnect("Connection reset by peer")
@@ -502,6 +502,14 @@ class ServerConnection(Connection):
             # Read nothing: connection must be down.
             self.disconnect("Connection reset by peer")
             return
+        for enc in ( 'utf-8', 'latin1', 'ascii', None ):
+            if enc == None:
+                raise Exception( 'Failed to decode incoming data' )
+            try:
+                new_data = new_data.decode( enc )
+                break
+            except:
+                pass
 
         lines = _linesep_regexp.split(self.previous_buffer + new_data)
 

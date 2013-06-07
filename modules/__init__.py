@@ -1,14 +1,11 @@
 import pkgutil, os, sys
+from imp import reload
 
-def getmodules():
-	return get_modules()
 def get_modules():
 	"""Returns all modules that are found in the current package.
 	Excludes modules starting with '_'"""
 	return [ name for _,name, _ in pkgutil.iter_modules( [ os.path.dirname( __file__ ) ] ) if name[0] != '_' ]
 
-def getmodule( module ):
-	return get_module( module )
 def get_module( module ):
 	"""Import module <module> and return the class.
 	This returns the class modules.<module>.<module>"""

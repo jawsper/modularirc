@@ -1,4 +1,4 @@
-from _module import _module
+from ._module import _module
 
 class karma( _module ):
 	"""karma: give or take karma. karma is given with !<something><operator> # <reason>. <operator> is ++ or --, reason is optional """
@@ -28,11 +28,11 @@ class karma( _module ):
 			self.notice( target, reply.format( source, item, self.item_karma( item ) ) )
 	
 	def item_karma_list( self, item ):
-		return filter( lambda v: v['item'] == item, self.karma )
+		return [ v for v in self.karma if v['item'] == item ]
 	
 	def item_karma( self, item ):
 		karma = 0
-		for evt in filter( lambda v: v['item'] == item, self.karma ):
+		for evt in [ v for v in self.karma if v['item'] == item ]:
 			karma += evt['mutation']
 		return karma
 	
@@ -51,7 +51,7 @@ class karma( _module ):
 			return [ 'No karma given out yet. (Maybe you should!)' ]
 		return [
 			'Karma:'
-		] + map( lambda ( item, karma ): ' * {0}: {1}'.format( item, karma ), self.total_karma().iteritems() )
+		] + [ ' * {0}: {1}'.format( item_karma1[0], item_karma1[1] ) for item_karma1 in self.total_karma().items() ]
 
 	def cmd_karmawhy( self, args, source, target, admin ):
 		"""!karmawhy [<what>]: show last karma, optionally for item name"""

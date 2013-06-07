@@ -10,13 +10,13 @@ class ModuleManager( object ):
 			logging.debug( 'Loading module {0}: {1}'.format( module_name, self.add_module( module_name ) ) )
 
 	def unload( self ):
-		for module_name in self.modules.keys():
+		for module_name in list( self.modules.keys() ):
 			logging.debug( 'Unloading module {0}: {1}'.format( module_name, self.remove_module( module_name ) ) )
 
 	def reload_modules( self ):
 		"""Reload all modules. Warning: this is fairly destructive"""
 		# remove modules that no longer exist
-		for module_name in [ m for m in self.modules.iterkeys() if m not in modules.get_modules() ]:
+		for module_name in [ m for m in self.modules.keys() if m not in modules.get_modules() ]:
 			self.remove_module( module_name )
 		# reload all modules
 		for module_name in self.modules:
@@ -27,7 +27,7 @@ class ModuleManager( object ):
 
 	def get_modules( self ):
 		"""Get all found modules"""
-		return self.modules.iterkeys()
+		return iter( self.modules.keys() )
 
 	def get_loaded_modules( self ):
 		"""Get all loaded modules"""
@@ -35,7 +35,7 @@ class ModuleManager( object ):
 
 	def get_available_modules( self ):
 		"""Get all available modules: modules that are found but not loaded"""
-		modules = filter( lambda key: key not in self.loaded_modules, self.modules.keys() )
+		modules = [ key for key in self.modules.keys() if key not in self.loaded_modules ]
 		modules.sort()
 		return modules
 	
@@ -116,4 +116,3 @@ class ModuleManager( object ):
 
 	def set_config( self, group, key, value ):
 		return self.bot.set_config( group, key, value )
-

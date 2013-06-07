@@ -1,4 +1,4 @@
-from _module import _module
+from ._module import _module
 import re
 
 class sed( _module ):
