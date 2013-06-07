@@ -7,6 +7,7 @@ from datetime import datetime
 from dateutil.tz import tzlocal
 import dateutil.parser
 from ._module import _module
+import logging
 
 class NsApiException(Exception):
 	pass
@@ -21,12 +22,13 @@ class ns( _module ):
 			self.username = self.get_config( 'username' )
 			self.password = self.get_config( 'password' )
 		except:
-			return
+			raise Exception
 		
 		try:
 			self.stations = self.__station_list()
 		except Exception as e:
-			print( 'Loading stations failed: {0}'.format( e ) )
+			logging.warning( 'Loading stations failed: %s', e )
+			raise e
 		
 	def cmd_ns( self, args, source, target, admin ):
 		"""!ns <command>: search train connections (send !ns help for more details)"""
@@ -60,7 +62,7 @@ class ns( _module ):
 		conn.request(
 			'GET',
 			'/{0}{1}'.format( api_method, '?' + urllib.parse.urlencode( args ) if args and len( args ) > 0 else '' ),
-			headers = { 'Authorization': 'Basic ' + base64.b64encode( '{0}:{1}'.format( self.username, self.password ) ) }
+			headers = { 'Authorization': 'Basic ' + base64.b64encode( '{0}:{1}'.format( self.username, self.password ).encode( 'utf-8' ) ).decode( 'utf-8' ) }
 		)
 		response = conn.getresponse()
 		data = response.read()
