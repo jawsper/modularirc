@@ -1,7 +1,7 @@
 ircbot
 ======
 Dependencies:
-python-dateutil
+python3-dateutil
 
 ======
 Config file ~/.ircbot:
