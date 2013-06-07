@@ -56,9 +56,9 @@ class Bot( SingleServerIRCBot ):
 		nickname = self.config.get( 'main', 'nickname' )
 
 		if password != None:
-			SingleServerIRCBot.__init__( self, [( server, port, password )], nickname, nickname )
+			SingleServerIRCBot.__init__( self, [( server, port, password )], nickname, nickname, ipv6 = True )
 		else:
-			SingleServerIRCBot.__init__( self, [( server, port )], nickname, nickname )
+			SingleServerIRCBot.__init__( self, [( server, port )], nickname, nickname, ipv6 = True )
 		
 		self.channel = channel
 		
