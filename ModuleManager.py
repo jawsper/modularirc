@@ -78,7 +78,7 @@ class ModuleManager( object ):
 		try:
 			self.loaded_modules[ module_name ] = self.modules[ module_name ]( self )
 		except Exception as e:
-			raise Exception( 'Module {} failed to load: {}'.format( module_name, e ) )
+			return 'Module {} failed to load: {}'.format( module_name, e )
 		return 'Module {} enabled'.format( module_name )
 
 	def disable_module( self, module_name ):
