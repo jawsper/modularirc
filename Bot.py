@@ -170,12 +170,16 @@ class Bot( SingleServerIRCBot ):
 					self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
 				except:
 					self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
-			elif cmd == 'set_config' and len( args ) >= 3:
+			elif cmd == 'set_config':
+				if len( args ) >= 3:
+					config_val = ' '.join( args[2:] )
+				else:
+					config_val = None
 				try:
-					self.set_config( args[0], args[1], ' '.join( args[ 2: ] ) )
-					self.notice( source, 'Set config setting' )
+					self.set_config( args[0], args[1], config_val )
+					self.notice( source, 'Set config setting' if config_val else 'Cleared config setting' )
 				except Exception as e:
-					self.notice( source, 'Failed setting config setting: {0}'.format( e ) )
+					self.notice( source, 'Failed setting/clearing config setting: {0}'.format( e ) )
 			# modules commands
 			elif cmd == 'modules':
 				self.notice( source, 'Modules: {0}'.format( ', '.join( self.modules.get_modules() ) ) )
@@ -312,10 +316,13 @@ class Bot( SingleServerIRCBot ):
 		"""sets a config value"""
 		cursor = self.db.cursor()
 		data = { 'group': group, 'key': key, 'value': value }
-		try:
-			self.get_config( group, key )
-			cursor.execute( 'update config set `value` = :value where `group` = :group and `key` = :key', data )
-		except:
-			cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( :group, :key, :value )', data )
+		if value == None:
+			cursor.execute( 'delete from config where `group` = :group and `key` = :key', data )
+		else:
+			try:
+				self.get_config( group, key )
+				cursor.execute( 'update config set `value` = :value where `group` = :group and `key` = :key', data )
+			except:
+				cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( :group, :key, :value )', data )
 		cursor.close()
 		self.db.commit()
