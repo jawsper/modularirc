@@ -291,7 +291,7 @@ class Bot( SingleServerIRCBot ):
 		logging.debug( "on_welcome" )
 		c.join( self.channel )
 
-	def get_config( self, group, key = None ):
+	def get_config( self, group, key = None, default = None ):
 		"""gets a config value"""
 		if key == None:
 			resultset = self.db.execute( 'select `key`, `value` from config where `group` = :group', { 'group': group } )
@@ -303,6 +303,8 @@ class Bot( SingleServerIRCBot ):
 			resultset = self.db.execute( 'select `value` from config where `group` = :group and `key` = :key', { 'group': group, 'key': key } )
 			value = resultset.fetchone()
 			if value == None:
+				if default != None:
+					return default
 				raise Exception
 			return value[0]
 

@@ -111,8 +111,8 @@ class ModuleManager( object ):
 	def privmsg( self, target, message ):
 		self.bot.privmsg( target, message )
 
-	def get_config( self, group, key ):
-		return self.bot.get_config( group, key )
+	def get_config( self, group, key, default = None ):
+		return self.bot.get_config( group, key, default )
 
 	def set_config( self, group, key, value ):
 		return self.bot.set_config( group, key, value )

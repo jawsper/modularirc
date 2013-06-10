@@ -35,7 +35,7 @@ class _module( object ):
 	def privmsg( self, target, message ):
 		self.mgr.privmsg( target, message )
 		
-	def get_config( self, key ):
-		return self.mgr.get_config( self.__class__.__name__, key )
+	def get_config( self, key, default = None ):
+		return self.mgr.get_config( self.__class__.__name__, key, default )
 	def set_config( self, key, value ):
 		self.mgr.set_config( self.__class__.__name__, key, value )
