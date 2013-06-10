@@ -8,14 +8,20 @@ sys.setdefaultencoding( 'utf-8' )
 import os, sys
 import Bot
 import logging
+
+logging_level = logging.DEBUG
+logging_format = '[%(asctime)s] %(levelname)s: %(message)s'
 	
 if __name__ == '__main__':
-	logging.basicConfig( filename = 'ircbot.log', level = logging.DEBUG, format = '[%(asctime)s] %(levelname)s: %(message)s' )
-	logging.info( "Welcome to botje" )
 	fork = True
 	if len( sys.argv ) > 1:
 		if sys.argv[1] == '-nofork':
 			fork = False
+	if fork:
+		logging.basicConfig( filename = 'ircbot.log', level = logging_level, format = logging_format )
+	else:
+		logging.basicConfig( level = logging_level, format = logging_format )
+	logging.info( "Welcome to botje" )
 	if fork:
 		try:
 			pid = os.fork()
