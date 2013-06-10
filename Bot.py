@@ -170,9 +170,9 @@ class Bot( SingleServerIRCBot ):
 					self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
 				except:
 					self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
-			elif cmd == 'set_config' and len( args ) == 3:
+			elif cmd == 'set_config' and len( args ) >= 3:
 				try:
-					self.set_config( *args )
+					self.set_config( args[0], args[1], ' '.join( args[ 2: ] )
 					self.notice( source, 'Set config setting' )
 				except Exception as e:
 					self.notice( source, 'Failed setting config setting: {0}'.format( e ) )
