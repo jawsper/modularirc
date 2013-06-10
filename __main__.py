@@ -39,8 +39,9 @@ if __name__ == '__main__':
 		except Bot.BotReloadException:
 			logging.info( 'Force reloading Bot class' )
 			botje = None
-			reload(Bot)
+			reload( Bot )
 			botje = Bot.Bot()
+			continue
 		logging.info( 'Botje died, restarting in 5...' )
 		import time
 		time.sleep( 5 )
