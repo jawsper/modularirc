@@ -10,7 +10,7 @@ class quote( _module ):
 	def __random_quote( self ):
 		"""Read a quote from a text file"""
 		try:
-			with open( self.get_config( 'quote_file' ) ) as fd:
+			with open( self.get_config( 'quote_file' ), 'rt', encoding = 'utf-8' ) as fd:
 				return random.choice( fd.readlines() )
 		except IOError as e:
 			logging.exception( 'Quote IOError' )
