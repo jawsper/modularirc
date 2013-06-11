@@ -1,8 +1,9 @@
 import logging
 
 class _module( object ):
-	def __init__( self, manager, admin_only = False ):
+	def __init__( self, manager, has_commands = True, admin_only = False ):
 		self.mgr = manager
+		self.has_commands = has_commands
 		self.admin_only = admin_only
 		logging.debug( 'Loading module {0}'.format( self.__class__.__name__ ) )
 	def __del__( self ):
