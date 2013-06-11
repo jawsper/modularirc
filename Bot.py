@@ -233,7 +233,7 @@ class Bot( SingleServerIRCBot ):
 							for line in lines:
 								self.notice( source, line )
 				except Exception as e:
-					logging.warning( "Module '{0}' handle error: {1}".format( module_name, e ) )
+					logging.exception( "Module '{0}' handle error: {1}".format( module_name, e ) )
 
 	def on_privmsg( self, c, e ):
 		#print( "on_privmsg" )
@@ -250,7 +250,7 @@ class Bot( SingleServerIRCBot ):
 			self.modules.unload()
 			raise e
 		except Exception as e:
-			logging.warning( 'Error in __process_command: %s', e )
+			logging.exception( 'Error in __process_command: %s', e )
 
 	def on_pubmsg( self, c, e ):
 		#print( "on_pubmsg" )
