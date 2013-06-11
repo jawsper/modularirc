@@ -75,7 +75,7 @@ class admin_functions( _module ):
 		"""!update_source: updates the source of the bot. does not reload the bot or the modules"""
 		self.notice( source, 'Please wait, running git...' )
 		result = subprocess.Popen( [ 'git', 'pull' ], stdout = subprocess.PIPE, cwd = os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) ) ).communicate()[0]
-		return [ 'Result: ' + result ]
+		return [ 'Result: ' + result.encode( 'utf-8' ) ]
 
 	# make the bot speak
 	def admin_cmd_say( self, args, source, target, admin ):
