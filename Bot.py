@@ -155,7 +155,7 @@ class Bot( SingleServerIRCBot ):
 					try:
 						values = self.get_config( args[0] )
 						if len( values ) > 0:
-							self.notice( source, 'config[{}]: '.format( args[0] ) + ', '.join( [ '{}: "{}"'.format( k,v ) for ( k, v ) in values.iteritems() ] ) )
+							self.notice( source, 'config[{}]: '.format( args[0] ) + ', '.join( [ '{}: "{}"'.format( k,v ) for ( k, v ) in values.items() ] ) )
 						else:
 							self.notice( source, 'config[{}] is empty'.format( args[0] ) )
 					except:
