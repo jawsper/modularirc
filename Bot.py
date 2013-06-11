@@ -305,10 +305,13 @@ class Bot( SingleServerIRCBot ):
 		logging.debug( 'set config %s.%s to "%s"', group, key, value )
 		cursor = self.db.cursor()
 		data = { 'group': group, 'key': key, 'value': value }
-		try:
-			self.get_config( group, key )
-			cursor.execute( 'update config set `value` = :value where `group` = :group and `key` = :key', data )
-		except:
-			cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( :group, :key, :value )', data )
+		if value == None:
+                        cursor.execute( 'delete from config where `group` = :group and `key` = :key', data )
+                else:
+			try:
+				self.get_config( group, key )
+				cursor.execute( 'update config set `value` = :value where `group` = :group and `key` = :key', data )
+			except:
+				cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( :group, :key, :value )', data )
 		cursor.close()
 		self.db.commit()
