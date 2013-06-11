@@ -306,8 +306,8 @@ class Bot( SingleServerIRCBot ):
 		cursor = self.db.cursor()
 		data = { 'group': group, 'key': key, 'value': value }
 		if value == None:
-                        cursor.execute( 'delete from config where `group` = :group and `key` = :key', data )
-                else:
+			cursor.execute( 'delete from config where `group` = :group and `key` = :key', data )
+		else:
 			try:
 				self.get_config( group, key )
 				cursor.execute( 'update config set `value` = :value where `group` = :group and `key` = :key', data )
