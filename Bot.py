@@ -80,7 +80,7 @@ class Bot( SingleServerIRCBot ):
 			try:
 				self.connection.process_data()
 			except socket.timeout:
-				logging.debug( 'Socket timeout' )
+				logging.warning( 'Socket timeout' )
 				return False
 			except BotReloadException as e:
 				self.connection.disconnect( "Reloading bot..." )
