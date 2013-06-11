@@ -200,7 +200,7 @@ class Bot( SingleServerIRCBot ):
 							self.notice( target, module.get_cmd( args[0] ).__doc__ )
 			else:
 				self.notice( target, '!help: this help text (send !help <command> for command help, send !help module <module> for module help)' )
-				for ( module_name, module ) in [ lst for lst in self.modules.get_loaded_modules() if not lst[1].admin_only ]:
+				for ( module_name, module ) in [ lst for lst in self.modules.get_loaded_modules() if lst[1].has_commands and not lst[1].admin_only ]:
 					cmds = module.get_cmd_list()
 					self.notice( target, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) if len( cmds ) > 0 else 'No commands' ) )
 
@@ -215,10 +215,6 @@ class Bot( SingleServerIRCBot ):
 				self.notice( source, '!raw:                                   send raw irc command' )
 				self.notice( source, '!admins:                                see who are admin' )
 				self.notice( source, '!restart_class:                         restart the main Bot class' )
-				self.notice( source, '!available_modules:                     see modules that are not currently loaded' )
-				self.notice( source, '!reload_module <module>[ <module>...]:  reload one or more modules' )
-				self.notice( source, '!enable_module <module>[ <module>...]:  enable one or more modules' )
-				self.notice( source, '!disable_module <module>[ <module>...]: disable one or more modules' )
 				for ( module_name, module ) in self.modules.get_loaded_modules():
 					cmds = module.get_admin_cmd_list()
 					if len( cmds ) > 0:
