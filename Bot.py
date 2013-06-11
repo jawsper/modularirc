@@ -164,12 +164,27 @@ class Bot( SingleServerIRCBot ):
 			elif cmd == 'restart_class':
 				raise BotReloadException
 			# config commands
-			elif cmd == 'get_config' and len( args ) == 2:
-				try:
-					value = self.get_config( args[0], args[1] )
-					self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
-				except:
-					self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
+			elif cmd == 'get_config' and len( args ) <= 2:
+				if len( args ) == 2:
+					try:
+						value = self.get_config( args[0], args[1] )
+						self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
+					except:
+						self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
+				elif len( args ) == 1:
+					try:
+						values = self.get_config( args[0] )
+						if len( values ) > 0:
+							self.notice( source, 'config[{}]: '.format( args[0] ) + ', '.join( [ '{}: "{}"'.format( k,v ) for ( k, v ) in values.iteritems() ] ) )
+						else:
+							self.notice( source, 'config[{}] is empty'.format( args[0] ) )
+					except:
+						self.notice( source, 'config[{}] not set'.format( args[0] ) )
+				else:
+					try:
+						self.notice( source, 'config groups: ' + ', '.join( self.get_config_groups() ) )
+					except Exception as e:
+						self.notice( source, 'No config groups: {}'.format( e ) )
 			elif cmd == 'set_config' and len( args ) >= 2:
 				if len( args ) >= 3:
 					config_val = ' '.join( args[2:] )
@@ -294,6 +309,10 @@ class Bot( SingleServerIRCBot ):
 	def on_welcome( self, c, e ):
 		logging.debug( "on_welcome" )
 		c.join( self.channel )
+
+	def get_config_groups( self ):
+		resultset = self.db.execute( 'select distinct `group` from config' )
+		return [ g for ( g, ) in resultset.fetchall() ]
 
 	def get_config( self, group, key = None, default = None ):
 		"""gets a config value"""
