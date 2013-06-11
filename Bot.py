@@ -278,6 +278,7 @@ class Bot( SingleServerIRCBot ):
 	def on_welcome( self, c, e ):
 		logging.debug( "on_welcome" )
 		c.join( self.channel )
+		self.__module_handle( 'welcome', c, e )
 
 	def get_config_groups( self ):
 		resultset = self.db.execute( 'select distinct `group` from config' )
