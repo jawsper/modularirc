@@ -246,6 +246,8 @@ class Bot( SingleServerIRCBot ):
 		try:
 			self.__process_command( c, e )
 		except BotReloadException as e:
+			self.connection.disconnect( "Reloading bot..." )
+			self.modules.unload()
 			raise e
 		except Exception as e:
 			logging.warning( 'Error in __process_command: %s', e )
