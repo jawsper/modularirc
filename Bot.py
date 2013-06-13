@@ -108,7 +108,7 @@ class Bot( SingleServerIRCBot ):
 				try:
 					getattr( module, handler )( *args )
 				except Exception as e:
-					logging.debug( 'Module handler {0} failed: {1}', handler, e )
+					logging.debug( 'Module handler %s failed: %s', handler, e )
 
 	def __process_command( self, c, e ):
 		"""Process a message coming from the server."""
@@ -258,6 +258,7 @@ class Bot( SingleServerIRCBot ):
 		
 	def on_join( self, c, e ):
 		self.connection.names( [e.target()] )
+		self.__module_handle( 'join', c, e )
 
 	def on_mode( self, c, e ):
 		self.connection.names( [e.target()] )
