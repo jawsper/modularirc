@@ -5,9 +5,9 @@ class _module( object ):
 		self.mgr = manager
 		self.has_commands = has_commands
 		self.admin_only = admin_only
-		logging.debug( 'Loading module {0}'.format( self.__class__.__name__ ) )
+		logging.debug( 'Module {0} __init__'.format( self.__class__.__name__ ) )
 	def __del__( self ):
-		logging.debug( 'Module {0} is being unloaded'.format( self.__class__.__name__ ) )
+		logging.debug( 'Module {0} __del__'.format( self.__class__.__name__ ) )
 		self.stop()
 	def stop( self ):
 		pass
