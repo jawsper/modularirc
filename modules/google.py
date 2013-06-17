@@ -50,9 +50,9 @@ class google( _module ):
 					'q': query
 				})
 			)
-			response = conn.getresponse()
+			response = conn.getresponse().read().decode('utf-8')
 
-			self.google_cache[ query ] = json.load( response )
+			self.google_cache[ query ] = json.loads( response )
 			with open( self.google_cache_file, 'wb' ) as f:
 				pickle.dump( self.google_cache, f )
 
