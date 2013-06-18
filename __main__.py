@@ -3,6 +3,7 @@
 import os, sys
 import Bot
 import logging
+import select
 
 from imp import reload
 
@@ -10,7 +11,7 @@ pid_file = os.path.join( os.path.dirname( __file__ ), 'ircbot.pid' )
 logging_file = os.path.join( os.path.dirname( __file__ ), 'ircbot.log' )
 logging_level = logging.DEBUG
 logging_format = '[%(asctime)s] %(levelname)s: %(message)s'
-	
+
 if __name__ == '__main__':
 	if os.path.exists( pid_file ):
 		print( 'PID file exists! If the bot is not running, please delete this file before trying to start again!' )
@@ -45,6 +46,8 @@ if __name__ == '__main__':
 			botje = None
 			reload( Bot )
 			botje = Bot.Bot()
+			continue
+		except select.error:
 			continue
 		except ( KeyboardInterrupt, Bot.BotExitException ):
 			botje.die()
