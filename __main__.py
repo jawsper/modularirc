@@ -6,10 +6,14 @@ import logging
 
 from imp import reload
 
+pid_file = 'ircbot.pid'
 logging_level = logging.DEBUG
 logging_format = '[%(asctime)s] %(levelname)s: %(message)s'
 	
 if __name__ == '__main__':
+	if os.path.exists( pid_file ):
+		print( 'PID file exists! If the bot is not running, please delete this file before trying to start again!' )
+		sys.exit( 1 )
 	fork = True
 	if len( sys.argv ) > 1:
 		if sys.argv[1] == '-nofork':
@@ -24,6 +28,8 @@ if __name__ == '__main__':
 			pid = os.fork()
 			if pid > 0:
 				logging.info( 'Forked into PID {0}'.format( pid ) )
+				with open( pid_file, 'w' ) as f:
+					f.write( pid )
 				sys.exit(0)
 		except OSError as error:
 			logging.error( 'Unable to fork. Error: {0} ({1})'.format( error.errno, error.strerror ) )
@@ -32,6 +38,10 @@ if __name__ == '__main__':
 	while True:
 		try:
 			botje.start()
+		except ( KeyboardInterrupt, Bot.BotExitException ):
+			botje.die()
+			logging.info( 'Exiting bot...' )
+			break
 		except Bot.BotReloadException:
 			logging.info( 'Force reloading Bot class' )
 			botje = None
@@ -41,3 +51,4 @@ if __name__ == '__main__':
 		logging.info( 'Botje died, restarting in 5...' )
 		import time
 		time.sleep( 5 )
+	if fork: os.remove( pid_file )
