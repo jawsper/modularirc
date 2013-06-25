@@ -260,8 +260,8 @@ class ns( _module ):
 		if not now:
 			return tijd_datetime.strftime( '%H:%M' )
 		tijd_delta = tijd_datetime - now
-		minuten = tijd_delta.seconds / 60
-		uren = minuten / 60
+		minuten = tijd_delta.seconds // 60
+		uren = minuten // 60
 		minuten %= 60
 		if uren > 0:
 			tijd_delta = '{0} uur, {1} minuten'.format( uren, minuten )
