@@ -11,6 +11,8 @@ from ModuleManager import ModuleManager
 
 class BotReloadException(Exception):
 	pass
+class BotExitException( Exception ):
+	pass
 
 class Bot( SingleServerIRCBot ):
 	"""The main brain of the IRC bot."""
@@ -43,7 +45,7 @@ class Bot( SingleServerIRCBot ):
 				port = int( s[1] )
 			except ValueError:
 				logging.error( "Error: Erroneous port." )
-				sys.exit(1)
+				raise BotExitException
 		else:
 			port = 6667
 
@@ -64,8 +66,6 @@ class Bot( SingleServerIRCBot ):
 		
 		for module_name in self.modules.get_available_modules():
 			self.modules.enable_module( module_name )
-		
-		signal.signal( signal.SIGINT, self.sigint_handler )
 
 	def start( self ):
 		logging.debug( 'start()' )
@@ -74,13 +74,8 @@ class Bot( SingleServerIRCBot ):
 	def die( self ):
 		logging.debug( 'die()' )
 		self.modules.unload()
-		SingleServerIRCBot.die(self)
-
-	def sigint_handler( self, signal, frame ):
-		"""Handle SIGINT to shutdown gracefully with Ctrl+C"""
-		logging.debug( 'Ctrl+C pressed, shutting down!' )
-		self.die()
-		sys.exit(0)
+		self.connection.disconnect( 'Bye, cruel world!' )
+		#SingleServerIRCBot.die(self)
 
 	def __prevent_flood( self ):
 		if self.last_msg > 0:
@@ -108,7 +103,7 @@ class Bot( SingleServerIRCBot ):
 				try:
 					getattr( module, handler )( *args )
 				except Exception as e:
-					logging.debug( 'Module handler {0} failed: {1}', handler, e )
+					logging.debug( 'Module handler %s failed: %s', handler, e )
 
 	def __process_command( self, c, e ):
 		"""Process a message coming from the server."""
@@ -139,8 +134,7 @@ class Bot( SingleServerIRCBot ):
 		if admin:
 			if cmd == 'die':
 				self.notice( source, 'Goodbye cruel world!' )
-				self.die()
-				return
+				raise BotExitException
 			elif cmd == 'restart_class':
 				raise BotReloadException
 			# config commands
@@ -245,6 +239,8 @@ class Bot( SingleServerIRCBot ):
 		self.__module_handle( 'privmsg', source, target, message )
 		try:
 			self.__process_command( c, e )
+		except BotExitException as e:
+			raise e
 		except BotReloadException as e:
 			self.connection.disconnect( "Reloading bot..." )
 			self.modules.unload()
@@ -258,6 +254,7 @@ class Bot( SingleServerIRCBot ):
 		
 	def on_join( self, c, e ):
 		self.connection.names( [e.target()] )
+		self.__module_handle( 'join', c, e )
 
 	def on_mode( self, c, e ):
 		self.connection.names( [e.target()] )
