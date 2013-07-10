@@ -22,7 +22,7 @@ class Bot( SingleServerIRCBot ):
 		
 		self.admin_channels = []
 		self.config = configparser.SafeConfigParser()
-		self.config.read( os.path.expanduser( "~/.ircbot" ) )
+		self.config.read( os.path.join( os.path.dirname( __file__ ),  'ircbot.ini' ) )
 		
 		self.admin = self.config.get( 'main', 'admin' ).split( ';' )
 		self.admin_channels = self.config.get( 'main', 'admin_channels' ).split( ';' )
