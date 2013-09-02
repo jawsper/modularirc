@@ -230,7 +230,7 @@ class Bot( SingleServerIRCBot ):
 					logging.exception( "Module '{0}' handle error: {1}".format( module_name, e ) )
 
 	def on_privmsg( self, c, e ):
-		#print( "on_privmsg" )
+		logging.debug( "on_privmsg" )
 		
 		source = nm_to_n( e.source() )
 		target = e.target() if is_channel( e.target() ) else source
@@ -249,13 +249,19 @@ class Bot( SingleServerIRCBot ):
 			logging.exception( 'Error in __process_command: %s', e )
 
 	def on_pubmsg( self, c, e ):
-		#print( "on_pubmsg" )
+		logging.debug( "on_pubmsg" )
 		self.on_privmsg( c, e )
+
+	def on_pubnotice( self, c, e ):
+		self.on_notice( c, e )
+	def on_privnotice( self, c, e ):
+		self.on_notice( c, e )
 
 	def on_notice( self, c, e ):
 		source = nm_to_n( e.source() )
 		target = e.target() if is_channel( e.target() ) else source
 		message = e.arguments()[0]
+		logging.debug( 'notice! source: {}, target: {}, message: {}'.format( source, target, message ) )
 		self.__module_handle( 'notice', source, target, message )
 
 	def on_join( self, c, e ):
