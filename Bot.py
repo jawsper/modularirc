@@ -256,8 +256,8 @@ class Bot( SingleServerIRCBot ):
 		source = nm_to_n( e.source() )
 		target = e.target() if is_channel( e.target() ) else source
 		message = e.arguments()[0]
-	    self.__module_handle( 'notice', source, target, message )
-		
+		self.__module_handle( 'notice', source, target, message )
+
 	def on_join( self, c, e ):
 		self.connection.names( [e.target()] )
 		self.__module_handle( 'join', c, e )
