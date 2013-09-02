@@ -251,6 +251,12 @@ class Bot( SingleServerIRCBot ):
 	def on_pubmsg( self, c, e ):
 		#print( "on_pubmsg" )
 		self.on_privmsg( c, e )
+
+	def on_notice( self, c, e ):
+		source = nm_to_n( e.source() )
+		target = e.target() if is_channel( e.target() ) else source
+		message = e.arguments()[0]
+	    self.__module_handle( 'notice', source, target, message )
 		
 	def on_join( self, c, e ):
 		self.connection.names( [e.target()] )
