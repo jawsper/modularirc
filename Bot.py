@@ -258,8 +258,8 @@ class Bot( SingleServerIRCBot ):
 		self.on_notice( c, e )
 
 	def on_notice( self, c, e ):
-		source = nm_to_n( e.source() )
-		target = e.target() if is_channel( e.target() ) else source
+		source = e.source()
+		target = e.target()
 		message = e.arguments()[0]
 		logging.debug( 'notice! source: {}, target: {}, message: {}'.format( source, target, message ) )
 		self.__module_handle( 'notice', source, target, message )
