@@ -426,14 +426,19 @@ class ServerConnection(Connection):
         self.localaddress = localaddress
         self.localport = localport
         self.localhost = socket.gethostname()
-        if ipv6:
+        addrinfo = socket.getaddrinfo(self.server, self.port, proto=socket.SOL_TCP)
+        conninfo = (self.server, self.port)
+        if len(addrinfo) > 0:
+            self.socket = socket.socket(*(addrinfo[0][:3]))
+            conninfo = addrinfo[0][4]
+        elif ipv6:
             self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         else:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.socket.settimeout( timeout )
             self.socket.bind((self.localaddress, self.localport))
-            self.socket.connect((self.server, self.port))
+            self.socket.connect(conninfo)
             if ssl:
                 self.ssl = socket.ssl(self.socket)
         except socket.error as x:
