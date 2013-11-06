@@ -1,10 +1,14 @@
 ircbot
 ======
+
+Written in Python 3
+
+======
 Dependencies:
 python3-dateutil
 
 ======
-Config file ~/.ircbot:
+Config file ircbot.ini:
 
 <pre>
 [main]
