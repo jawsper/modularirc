@@ -48,7 +48,8 @@ if __name__ == '__main__':
             reload( Bot )
             botje = Bot.Bot()
             continue
-        except select.error:
+        except select.error as e:
+            logging.exception("select.error")
             continue
         except ( KeyboardInterrupt, Bot.BotExitException ):
             botje.die()

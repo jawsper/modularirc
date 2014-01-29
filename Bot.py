@@ -6,6 +6,7 @@ import socket
 import modules
 import sqlite3
 import logging
+import json
 
 from ModuleManager import ModuleManager
 
@@ -20,12 +21,11 @@ class Bot( SingleServerIRCBot ):
         self.last_msg = -1
         self.msg_flood_limit = 0.25
 
-        self.admin_channels = []
-        self.config = configparser.SafeConfigParser()
-        self.config.read( os.path.join( os.path.dirname( __file__ ),  'ircbot.ini' ) )
-
-        self.admin = self.config.get( 'main', 'admin' ).split( ';' )
-        self.admin_channels = self.config.get( 'main', 'admin_channels' ).split( ';' )
+        with open(os.path.join(os.path.dirname(__file__), 'ircbot.conf')) as f:
+            data = json.load(f)
+            self.servers = data['servers']
+        
+        self.select_server(0)
 
         self.db = sqlite3.connect( os.path.join( os.path.dirname( __file__ ), 'ircbot.sqlite3' ), check_same_thread = False )
         cursor = self.db.cursor()
@@ -38,34 +38,24 @@ class Bot( SingleServerIRCBot ):
 
         self.channel_ops = {}
 
-        s = self.config.get( "main", "server" ).split( ":", 1 )
-        server = s[0]
-        if len(s) == 2:
-            try:
-                port = int( s[1] )
-            except ValueError:
-                logging.error( "Error: Erroneous port." )
-                raise BotExitException
-        else:
-            port = 6667
+        server = self.current_server['host']
+        port = self.current_server['port'] if 'port' in self.current_server else 6667
+        password = self.current_server['password'] if 'password' in self.current_server else ''
+        nickname = self.current_server['nickname']
 
-        try:
-            password = self.config.get( "main", "password" )
-        except:
-            password = None
-
-        channel = self.config.get( 'main', 'channel' )
-        nickname = self.config.get( 'main', 'nickname' )
-
-        if password != None:
+        if len(password):
             SingleServerIRCBot.__init__( self, [( server, port, password )], nickname, nickname, ipv6 = True )
         else:
             SingleServerIRCBot.__init__( self, [( server, port )], nickname, nickname, ipv6 = True )
 
-        self.channel = channel
-
         for module_name in self.modules.get_available_modules():
             self.modules.enable_module( module_name )
+    
+    def select_server(self, index):
+        self.current_server = self.servers[index]
+
+        self.admin = self.current_server['global_admins']
+        self.admin_channels = self.current_server['admin_channels']
 
     def start( self ):
         logging.debug( 'start()' )
@@ -135,6 +125,8 @@ class Bot( SingleServerIRCBot ):
             if cmd == 'die':
                 self.notice( source, 'Goodbye cruel world!' )
                 raise BotExitException
+            elif cmd == 'jump':
+                self.jump_server()
             elif cmd == 'restart_class':
                 raise BotReloadException
             # config commands
@@ -284,7 +276,8 @@ class Bot( SingleServerIRCBot ):
 
     def on_welcome( self, c, e ):
         logging.debug( "on_welcome" )
-        c.join( self.channel )
+        for chan in self.current_server['channels']:
+            c.join( chan )
         self.__module_handle( 'welcome', c, e )
 
     def get_config_groups( self ):

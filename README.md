@@ -5,17 +5,25 @@ Written in Python 3
 
 ======
 Dependencies:
-python3-dateutil
+python3-dateutil (for module ns)
 
 ======
-Config file ircbot.ini:
+Config file ircbot.conf:
 
 <pre>
-[main]
-server=$host[:$port]
-[password=$password]
-channel=$channel
-nickname=$nickname
-admin=$admin([;$other_admin)*
-admin_channels=$channel[;$channel ...]
+{
+	"version": "1.0",
+	"servers":
+	[
+		{
+			"nickname": "",
+			"host": "",
+			"port": 0,
+			"password": "",
+			"channels": [],
+			"admin_channels": [],
+			"global_admins": []
+		}
+	]
+}
 </pre>
