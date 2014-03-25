@@ -47,6 +47,7 @@ if __name__ == '__main__':
             botje = None
             reload( Bot )
             botje = Bot.Bot()
+            botje.modules.reload_modules()
             continue
         except select.error as e:
             logging.exception("select.error")
