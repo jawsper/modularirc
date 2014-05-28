@@ -19,6 +19,7 @@ Config file ircbot.conf:
 			"nickname": "",
 			"host": "",
 			"port": 0,
+			"ssl": false,
 			"password": "",
 			"channels": [],
 			"admin_channels": [],

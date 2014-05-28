@@ -41,13 +41,12 @@ class Bot( SingleServerIRCBot ):
 
         server = self.current_server['host']
         port = self.current_server['port'] if 'port' in self.current_server else 6667
+        ssl = self.current_server['ssl'] if 'ssl' in self.current_server else False
         password = self.current_server['password'] if 'password' in self.current_server else ''
         nickname = self.current_server['nickname']
 
-        if len(password):
-            SingleServerIRCBot.__init__( self, [( server, port, password )], nickname, nickname, ipv6 = True )
-        else:
-            SingleServerIRCBot.__init__( self, [( server, port )], nickname, nickname, ipv6 = True )
+        conn_server = [(server, port, password) if len(password) else (server, port)]
+        SingleServerIRCBot.__init__(self, conn_server, nickname, nickname, ssl=ssl, ipv6=True)
 
         for module_name in self.modules.get_available_modules():
             self.modules.enable_module( module_name )
