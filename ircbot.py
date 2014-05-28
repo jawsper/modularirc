@@ -41,7 +41,7 @@ class SingleServerIRCBot(SimpleIRCClient):
     have operator or voice modes.  The "database" is kept in the
     self.channels attribute, which is an IRCDict of Channels.
     """
-    def __init__(self, server_list, nickname, realname, reconnection_interval=60, ipv6 = False):
+    def __init__(self, server_list, nickname, realname, reconnection_interval=60, **kwargs):
         """Constructor for SingleServerIRCBot objects.
 
         Arguments:
@@ -70,7 +70,8 @@ class SingleServerIRCBot(SimpleIRCClient):
 
         self._nickname = nickname
         self._realname = realname
-        self._ipv6 = ipv6
+        self._ssl = True if 'ssl' in kwargs and kwargs['ssl'] else False
+        self._ipv6 = True if 'ipv6' in kwargs and kwargs['ipv6'] else False
         for i in ["disconnect", "join", "kick", "mode",
                   "namreply", "nick", "part", "quit"]:
             self.connection.add_global_handler(i,
@@ -94,6 +95,7 @@ class SingleServerIRCBot(SimpleIRCClient):
                          self._nickname,
                          password,
                          ircname=self._realname,
+                         ssl=self._ssl,
                          ipv6=self._ipv6,
                          timeout = 5 * 60 # 5 minutes
                         )
