@@ -69,6 +69,7 @@ import string
 import sys
 import time
 import types
+import ssl as ssl_lib
 
 VERSION = 0, 4, 8
 DEBUG = 0
@@ -376,7 +377,6 @@ class ServerConnection(Connection):
         Connection.__init__(self, irclibobj)
         self.connected = 0  # Not connected yet.
         self.socket = None
-        self.ssl = None
 
     def connect(self, server, port, nickname, password=None, username=None,
                 ircname=None, localaddress="", localport=0, ssl=False, ipv6=False, timeout = 300 ):
@@ -440,7 +440,7 @@ class ServerConnection(Connection):
             self.socket.bind((self.localaddress, self.localport))
             self.socket.connect(conninfo)
             if ssl:
-                self.ssl = socket.ssl(self.socket)
+                self.socket = ssl_lib.wrap_socket(self.socket)
         except socket.error as x:
             self.socket.close()
             self.socket = None
@@ -495,10 +495,7 @@ class ServerConnection(Connection):
         """[Internal]"""
 
         try:
-            if self.ssl:
-                new_data = self.ssl.read(2**14)
-            else:
-                new_data = self.socket.recv(2**14)
+            new_data = self.socket.recv(2**14)
         except socket.error as x:
             # The server hung up.
             self.disconnect("Connection reset by peer")
@@ -800,10 +797,7 @@ class ServerConnection(Connection):
         if self.socket is None:
             raise ServerNotConnectedError("Not connected.")
         try:
-            if self.ssl:
-                self.ssl.write(string + "\r\n")
-            else:
-                self.socket.send( bytes( string + "\r\n", 'utf-8' ) )
+            self.socket.send( bytes( string + "\r\n", 'utf-8' ) )
             if DEBUG:
                 print("TO SERVER:", string)
         except socket.error as x:
