@@ -258,7 +258,7 @@ class IRCDict(dict):
 
     Otherwise, it should behave exactly as a normal dictionary.
     """
-	
+
     def __init__( self, *args ):
         dict.__init__( self, *args )
     def __get_item__( self, key ):

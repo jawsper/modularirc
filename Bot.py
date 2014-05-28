@@ -272,7 +272,7 @@ class Bot( SingleServerIRCBot ):
 
     def on_namreply( self, c, e ):
         chan = e.arguments()[1]
-        people = e.arguments()[2].split( ' ' )
+        people = e.arguments()[2].rstrip().split( ' ' )
         ops = [ p[1:] for p in people if p[0] == '@' ]
         self.channel_ops[ chan ] = ops
 
