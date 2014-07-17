@@ -4,6 +4,53 @@ import logging
 import urllib.request
 from hurry.filesize import size as filesize
 import html.parser
+import threading
+
+class WorkerThread(threading.Thread):
+    def __init__(self, module, target, url):
+        super().__init__()
+        self.module = module
+        self.target = target
+        self.url = url
+    def run(self):
+        r = urllib.request.urlopen(self.url)
+        if not 'Content-Type' in r.headers:
+            return
+        content_type_header = [x.strip() for x in r.headers['Content-Type'].split(';')]
+        mime_type = content_type_header[0]
+        encoding = None
+        for param in content_type_header[1:]:
+            if param.startswith('charset='):
+                encoding = param[param.index('=')+1:]
+        try:
+            logging.debug(mime_type)
+            if mime_type == 'text/html':
+                logging.debug(encoding)
+                content = r.read(1024).decode(encoding or 'ascii')
+                while not re.search('</title>', content, re.I):
+                    _ = r.read(1024)
+                    if not _:
+                        break
+                    content += _.decode(encoding or 'ascii')
+                title = re.search(r'<title>(.+)</title>', content, re.S | re.I)
+                if title:
+                    title = title.groups(1)[0].strip()
+                    h = html.parser.HTMLParser()
+                    title = h.unescape(title)
+                    self.module.privmsg(self.target, 'Title: {}'.format(title))
+            elif mime_type.startswith('image/'):
+                try:
+                    size = get_image_size2(int(r.headers['Content-Length']), r)
+                    self.module.privmsg(self.target, 'Image [{}]: dimensions {} x {}'.format(mime_type.split('/')[1], size[0], size[1]))
+                except Exception as e:
+                    print(e.msg)
+            else:
+                self.module.privmsg(self.target, 'Content type: {}, size: {}'.format(r.headers['Content-Type'], filesize(int(r.headers['Content-Length']))))
+        except:
+            logging.exception('Errorrr')
+        finally:
+            r.close()
+        
 
 class url_scanner(_module):
     def on_privmsg(self, source, target, message):
@@ -11,44 +58,7 @@ class url_scanner(_module):
         if m:
             url = m.groups(1)[0]
             self.privmsg(target, 'URL detected: {}'.format(url))
-            r = urllib.request.urlopen(url)
-            if not 'Content-Type' in r.headers:
-                return
-            content_type_header = [x.strip() for x in r.headers['Content-Type'].split(';')]
-            mime_type = content_type_header[0]
-            encoding = None
-            for param in content_type_header[1:]:
-                if param.startswith('charset='):
-                    encoding = param[param.index('=')+1:]
-            try:
-                logging.debug(mime_type)
-                if mime_type == 'text/html':
-                    logging.debug(encoding)
-                    content = r.read(1024).decode(encoding or 'ascii')
-                    while not re.search('</title>', content, re.I):
-                        _ = r.read(1024)
-                        if not _:
-                            break
-                        content += _.decode(encoding or 'ascii')
-                    title = re.search(r'<title>(.+)</title>', content, re.S | re.I)
-                    if title:
-                        title = title.groups(1)[0].strip()
-                        h = html.parser.HTMLParser()
-                        title = h.unescape(title)
-                        self.privmsg(target, 'Title: {}'.format(title))
-                elif mime_type.startswith('image/'):
-                    try:
-                        size = get_image_size2(int(r.headers['Content-Length']), r)
-                        self.privmsg(target, 'Image [{}]: dimensions {} x {}'.format(mime_type.split('/')[1], size[0], size[1]))
-                    except Exception as e:
-                        print(e.msg)
-                else:
-                    self.privmsg(target, 'Content type: {}, size: {}'.format(r.headers['Content-Type'], filesize(int(r.headers['Content-Length']))))
-            except:
-                logging.exception('Errorrr')
-            finally:
-                r.close()
-
+            WorkerThread(self, target, url).start()
 
 
 # thank you https://github.com/scardine/image_size :)
