@@ -7,9 +7,10 @@ import html.parser
 import threading
 
 class WorkerThread(threading.Thread):
-    def __init__(self, module, target, url):
+    def __init__(self, module, source, target, url):
         super().__init__()
         self.module = module
+        self.source = source
         self.target = target
         self.url = url
     def run(self):
@@ -37,19 +38,23 @@ class WorkerThread(threading.Thread):
                     title = title.groups(1)[0].strip()
                     h = html.parser.HTMLParser()
                     title = h.unescape(title)
-                    self.module.privmsg(self.target, 'Title: {}'.format(title))
+                    self.reply('Title: {}'.format(title))
+                else:
+                    self.reply('No title found on page...')
             elif mime_type.startswith('image/'):
                 try:
                     size = get_image_size2(int(r.headers['Content-Length']), r)
-                    self.module.privmsg(self.target, 'Image [{}]: dimensions {} x {}'.format(mime_type.split('/')[1], size[0], size[1]))
+                    self.reply('Image [{}]: dimensions {} x {}'.format(mime_type.split('/')[1], size[0], size[1]))
                 except Exception as e:
                     print(e.msg)
             else:
-                self.module.privmsg(self.target, 'Content type: {}, size: {}'.format(r.headers['Content-Type'], filesize(int(r.headers['Content-Length']))))
+                self.reply('Content type: {}, size: {}'.format(r.headers['Content-Type'], filesize(int(r.headers['Content-Length']))))
         except:
             logging.exception('Errorrr')
         finally:
             r.close()
+    def reply(self, message):
+        self.module.notice(self.target, '{}: {}'.format(self.source, message))
         
 
 class url_scanner(_module):
@@ -57,8 +62,8 @@ class url_scanner(_module):
         m = re.search(r'(https?://\S+)', message)
         if m:
             url = m.groups(1)[0]
-            self.privmsg(target, 'URL detected: {}'.format(url))
-            WorkerThread(self, target, url).start()
+            #self.notice(target, 'URL detected: {}'.format(url))
+            WorkerThread(self, source, target, url).start()
 
 
 # thank you https://github.com/scardine/image_size :)
