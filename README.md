@@ -5,6 +5,7 @@ Written in Python 3
 
 ======
 Dependencies:
+irc (https://pypi.python.org/pypi/irc)
 python3-dateutil (for module ns)
 
 ======

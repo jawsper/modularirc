@@ -1,9 +1,12 @@
-import configparser, sys, os, signal, subprocess
-import datetime,time
-from ircbot import SingleServerIRCBot
-from irclib import nm_to_n, nm_to_uh, is_channel
-import socket
-import modules
+import os
+import time
+
+import irc.bot
+import irc.connection
+from irc.client import is_channel
+
+import ssl
+
 import sqlite3
 import logging
 import json
@@ -15,7 +18,7 @@ class BotReloadException(Exception):
 class BotExitException( Exception ):
     pass
 
-class Bot( SingleServerIRCBot ):
+class Bot(irc.bot.SingleServerIRCBot):
     """The main brain of the IRC bot."""
     def __init__( self ):
         logging.debug('Bot __init__')
@@ -25,7 +28,7 @@ class Bot( SingleServerIRCBot ):
         with open(os.path.join(os.path.dirname(__file__), 'ircbot.conf')) as f:
             data = json.load(f)
             self.servers = data['servers']
-        
+
         self.select_server(0)
 
         self.db = sqlite3.connect( os.path.join( os.path.dirname( __file__ ), 'ircbot.sqlite3' ), check_same_thread = False )
@@ -41,16 +44,18 @@ class Bot( SingleServerIRCBot ):
 
         server = self.current_server['host']
         port = self.current_server['port'] if 'port' in self.current_server else 6667
-        ssl = self.current_server['ssl'] if 'ssl' in self.current_server else False
+        ssl_enabled = self.current_server['ssl'] if 'ssl' in self.current_server else False
+        ipv6_enabled = self.current_server['ipv6'] if 'ipv6' in self.current_server else False
         password = self.current_server['password'] if 'password' in self.current_server else ''
         nickname = self.current_server['nickname']
 
-        conn_server = [(server, port, password) if len(password) else (server, port)]
-        SingleServerIRCBot.__init__(self, conn_server, nickname, nickname, ssl=ssl, ipv6=True)
+        factory = irc.connection.Factory(wrapper=ssl.wrap_socket if ssl_enabled else lambda x: x, ipv6=ipv6_enabled)
+
+        super(Bot, self).__init__([irc.bot.ServerSpec(server, port, password)], nickname, nickname, connect_factory=factory)
 
         for module_name in self.modules.get_available_modules():
             self.modules.enable_module( module_name )
-    
+
     def select_server(self, index):
         self.current_server = self.servers[index]
 
@@ -59,13 +64,13 @@ class Bot( SingleServerIRCBot ):
 
     def start( self ):
         logging.debug( 'start()' )
-        SingleServerIRCBot.start( self )
+        super(Bot, self).start()
 
     def die( self ):
         logging.debug( 'die()' )
         self.modules.unload()
         self.connection.disconnect( 'Bye, cruel world!' )
-        #SingleServerIRCBot.die(self)
+        #super(Bot, self).die()
 
     def __prevent_flood( self ):
         if self.last_msg > 0:
@@ -97,7 +102,7 @@ class Bot( SingleServerIRCBot ):
 
     def __process_command( self, c, e ):
         """Process a message coming from the server."""
-        message = e.arguments()[0]
+        message = e.arguments[0]
         # commands have to start with !
         if message[0] != '!':
             return
@@ -106,16 +111,14 @@ class Bot( SingleServerIRCBot ):
         # cmd is the first item
         cmd = args.pop(0).strip()
         # test for admin
-        admin = nm_to_uh( e.source() ) in self.admin
+        admin = e.source.userhost in self.admin
         if not admin:
-            if e.target() in self.admin_channels and e.target() in self.channel_ops and nm_to_n( e.source() ) in self.channel_ops[ e.target() ]:
+            if e.target in self.admin_channels and e.target in self.channel_ops and e.source.nick in self.channel_ops[ e.target ]:
                 admin = True
 
         # nick is the sender of the message, target is either a channel or the sender.
-        source = nm_to_n( e.source() )
-        target = e.target()
-        if not is_channel( target ):
-            target = source
+        source = e.source.nick
+        target = e.target if is_channel(e.target) else source
 
         # see if there is a module that is willing to handle this, and make it so.
         logging.debug( '__process_command (src: %s; tgt: %s; cmd: %s; args: %s; admin: %s)', source, target, cmd, args, admin )
@@ -221,12 +224,12 @@ class Bot( SingleServerIRCBot ):
                 except Exception as e:
                     logging.exception( "Module '{0}' handle error: {1}".format( module_name, e ) )
 
-    def on_privmsg( self, c, e ):
-        logging.debug( "on_privmsg" )
+    def on_privmsg(self, c, e):
+        logging.debug("on_privmsg")
 
-        source = nm_to_n( e.source() )
-        target = e.target() if is_channel( e.target() ) else source
-        message = e.arguments()[0]
+        source = e.source.nick
+        target = e.target if is_channel( e.target ) else source
+        message = e.arguments[0]
 
         self.__module_handle( 'privmsg', source, target, message )
         try:
@@ -240,38 +243,38 @@ class Bot( SingleServerIRCBot ):
         except Exception as e:
             logging.exception( 'Error in __process_command: %s', e )
 
-    def on_pubmsg( self, c, e ):
-        logging.debug( "on_pubmsg" )
-        self.on_privmsg( c, e )
+    def on_pubmsg(self, c, e):
+        logging.debug("on_pubmsg")
+        self.on_privmsg(c, e)
 
-    def on_pubnotice( self, c, e ):
+    def on_pubnotice(self, c, e):
         self.on_notice( c, e )
-    def on_privnotice( self, c, e ):
-        self.on_notice( c, e )
+    def on_privnotice(self, c, e):
+        self.on_notice(c, e)
 
-    def on_notice( self, c, e ):
-        source = e.source()
-        target = e.target()
-        message = e.arguments()[0]
-        logging.debug( 'notice! source: {}, target: {}, message: {}'.format( source, target, message ) )
-        self.__module_handle( 'notice', source, target, message )
+    def on_notice(self, c, e):
+        source = e.source
+        target = e.target
+        message = e.arguments[0]
+        logging.debug('notice! source: {}, target: {}, message: {}'.format(source, target, message))
+        self.__module_handle('notice', source, target, message)
 
-    def on_join( self, c, e ):
-        self.connection.names( [e.target()] )
-        self.__module_handle( 'join', c, e )
+    def on_join(self, c, e):
+        self.connection.names([e.target])
+        self.__module_handle('join', c, e)
 
     def on_part(self, c, e):
-        self.connection.names([e.target()])
+        self.connection.names([e.target])
 
     def on_kick(self, c, e):
-        self.connection.names([e.target()])
+        self.connection.names([e.target])
 
     def on_mode( self, c, e ):
-        self.connection.names( [e.target()] )
+        self.connection.names( [e.target] )
 
     def on_namreply( self, c, e ):
-        chan = e.arguments()[1]
-        people = e.arguments()[2].rstrip().split( ' ' )
+        chan = e.arguments[1]
+        people = e.arguments[2].rstrip().split( ' ' )
         ops = [ p[1:] for p in people if p[0] == '@' ]
         self.channel_ops[ chan ] = ops
 
