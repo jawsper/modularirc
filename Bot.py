@@ -52,6 +52,8 @@ class Bot(irc.bot.SingleServerIRCBot):
         factory = irc.connection.Factory(wrapper=ssl.wrap_socket if ssl_enabled else lambda x: x, ipv6=ipv6_enabled)
 
         super(Bot, self).__init__([irc.bot.ServerSpec(server, port, password)], nickname, nickname, connect_factory=factory)
+        
+        self.connection.set_rate_limit(30)
 
         for module_name in self.modules.get_available_modules():
             self.modules.enable_module( module_name )
@@ -72,22 +74,11 @@ class Bot(irc.bot.SingleServerIRCBot):
         self.connection.disconnect( 'Bye, cruel world!' )
         #super(Bot, self).die()
 
-    def __prevent_flood( self ):
-        if self.last_msg > 0:
-            if time.time() < self.last_msg + self.msg_flood_limit:
-                sleep_time = self.last_msg + self.msg_flood_limit - time.time()
-                logging.debug( 'Need to sleep for {0}'.format( sleep_time ) )
-                time.sleep( sleep_time )
-        self.last_msg = time.time()
-
     def notice( self, target, message ):
-        self.__prevent_flood()
         self.connection.notice( target, message )
     def privmsg( self, target, message ):
-        self.__prevent_flood()
         self.connection.privmsg( target, message )
     def action( self, target, message ):
-        self.__prevent_flood()
         self.connection.action( target, message )
 
     def __module_handle( self, handler, *args ):
