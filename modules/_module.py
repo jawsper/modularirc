@@ -37,3 +37,6 @@ class _module( object ):
 		return self.mgr.get_config( self.__class__.__name__, key, default )
 	def set_config( self, key, value ):
 		self.mgr.set_config( self.__class__.__name__, key, value )
+
+	def get_module(self, name):
+		return self.mgr.get_module(name)

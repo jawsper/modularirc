@@ -124,3 +124,7 @@ class ModuleManager( object ):
 
 	def set_config( self, group, key, value ):
 		return self.bot.set_config( group, key, value )
+
+	def get_module(self, name):
+		if name in self.loaded_modules:
+			return self.loaded_modules[name]
