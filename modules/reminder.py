@@ -40,9 +40,15 @@ class reminder( _module ):
                     self.reminders[name][source] = message
                     return ['New reminder set']
             else:
+                if len(message) == 0:
+                    return ['No reminder to be cleared']
+                else:
+                    self.reminders[name][source] = message
+                    return ['Reminder set']
+        else:
+            if len(message) == 0:
+                return ['No reminder to be cleared']
+            else:
+                self.reminders[name] = {}
                 self.reminders[name][source] = message
                 return ['Reminder set']
-        else:
-            self.reminders[name] = {}
-            self.reminders[name][source] = message
-            return ['Reminder set']
