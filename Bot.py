@@ -4,6 +4,9 @@ import time
 import irc.bot
 import irc.connection
 from irc.client import is_channel
+import irc.client
+import irc.buffer
+irc.client.ServerConnection.buffer_class = irc.buffer.LenientDecodingLineBuffer
 
 import ssl
 
@@ -13,6 +16,8 @@ import json
 
 from ModuleManager import ModuleManager
 
+class BotRestartException(Exception):
+    pass
 class BotReloadException(Exception):
     pass
 class BotExitException( Exception ):
@@ -89,7 +94,7 @@ class Bot(irc.bot.SingleServerIRCBot):
                 try:
                     getattr( module, handler )( *args )
                 except Exception as e:
-                    logging.debug( 'Module handler %s failed: %s', handler, e )
+                    logging.debug( 'Module handler %s.%s failed: %s', _, handler, e )
 
     def __process_command( self, c, e ):
         """Process a message coming from the server."""

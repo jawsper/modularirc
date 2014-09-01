@@ -42,6 +42,8 @@ if __name__ == '__main__':
         try:
             logging.info( 'Starting bot...' )
             botje.start()
+        except Bot.BotRestartException:
+            continue
         except Bot.BotReloadException:
             logging.info( 'Force reloading Bot class' )
             botje = None
@@ -55,7 +57,7 @@ if __name__ == '__main__':
         except ( KeyboardInterrupt, Bot.BotExitException ):
             botje.die()
             break
-        logging.info( 'Botje died, restarting in 5...' )
+        logging.warning( 'Botje died, restarting in 5...' )
         import time
         time.sleep( 5 )
     logging.info( 'Exiting bot...' )

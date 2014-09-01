@@ -7,11 +7,11 @@ class ModuleManager( object ):
 		self.modules = {}
 		self.loaded_modules = {}
 		for module_name in modules.get_modules():
-			logging.debug( 'Loading module {0}: {1}'.format( module_name, self.add_module( module_name ) ) )
+			logging.info( 'Loading module {0}: {1}'.format( module_name, self.add_module( module_name ) ) )
 
 	def unload( self ):
 		for module_name in list( self.modules.keys() ):
-			logging.debug( 'Unloading module {0}: {1}'.format( module_name, self.remove_module( module_name ) ) )
+			logging.info( 'Unloading module {0}: {1}'.format( module_name, self.remove_module( module_name ) ) )
 
 	def reload_modules( self ):
 		"""Reload all modules. Warning: this is fairly destructive"""
