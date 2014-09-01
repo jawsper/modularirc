@@ -1,10 +1,16 @@
 from ._module import _module
 import logging
+import json
 
 class reminder( _module ):
     def __init__(self, mgr):
         _module.__init__(self, mgr)
-        self.reminders = {}
+        try:
+            self.reminders = json.loads(self.get_config('reminders'))
+        except:
+            self.reminders = {}
+    def __del__(self):
+        self.set_config('reminders', json.dumps(self.reminders))
 
     def on_join(self, c, e):
         name = e.source.nick
