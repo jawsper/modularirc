@@ -80,10 +80,13 @@ class Bot(irc.bot.SingleServerIRCBot):
         #super(Bot, self).die()
 
     def notice( self, target, message ):
+        for char in '\r\n': message = message.replace(char, '')
         self.connection.notice( target, message )
     def privmsg( self, target, message ):
+        for char in '\r\n': message = message.replace(char, '')
         self.connection.privmsg( target, message )
     def action( self, target, message ):
+        for char in '\r\n': message = message.replace(char, '')
         self.connection.action( target, message )
 
     def __module_handle( self, handler, *args ):
