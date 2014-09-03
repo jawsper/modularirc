@@ -58,12 +58,14 @@ class google( _module ):
 
 		results = self.google_cache[ query ]
 		if 'items' in results and results['items'] and results['items'][0]:
+			snippet = re.sub('[\r\n]', ' ', results['items'][0]['snippet'])
+			snippet = snippet.replace('  ', ' ')
 			return [
 				"{0}: {1}".format(
 					results['items'][0]['title'],
 					results['items'][0]['link']
 				),
-				re.sub( ' {2,}', ' ', results['items'][0]['snippet'].strip()),
+				re.sub( ' {2,}', ' ', snippet),
 				'Meer resultaten: http://www.google.nl/search?q={0}'.format( '+'.join( args ) )
 			]
 		else:
