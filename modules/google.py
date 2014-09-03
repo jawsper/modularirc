@@ -63,7 +63,7 @@ class google( _module ):
 					results['items'][0]['title'],
 					results['items'][0]['link']
 				),
-				re.sub( ' {2,}', ' ', results['items'][0]['snippet'] ),
+				re.sub( ' {2,}', ' ', results['items'][0]['snippet'].strip()),
 				'Meer resultaten: http://www.google.nl/search?q={0}'.format( '+'.join( args ) )
 			]
 		else:
