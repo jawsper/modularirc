@@ -79,15 +79,26 @@ class Bot(irc.bot.SingleServerIRCBot):
         self.connection.disconnect( 'Bye, cruel world!' )
         #super(Bot, self).die()
 
+    def __process_message(self, message):
+        for char in '\r\n': message = message.replace(char, '')
+        MAX_MESSAGE_COUNT = 5
+        MAX_LINE_LEN = 256
+        m = []
+        for i in range(0, len(message), MAX_LINE_LEN):
+            if len(m) >= MAX_MESSAGE_COUNT:
+                m.append('(message truncated) ...')
+                break
+            m.append(message[i:i + MAX_LINE_LEN])
+        return m
     def notice( self, target, message ):
-        for char in '\r\n': message = message.replace(char, '')
-        self.connection.notice( target, message )
+        for m in self.__process_message(message):
+            self.connection.notice(target, m)
     def privmsg( self, target, message ):
-        for char in '\r\n': message = message.replace(char, '')
-        self.connection.privmsg( target, message )
+        for m in self.__process_message(message):
+            self.connection.privmsg(target, m)
     def action( self, target, message ):
-        for char in '\r\n': message = message.replace(char, '')
-        self.connection.action( target, message )
+        for m in self.__process_message(message):
+            self.connection.action(target, m)
 
     def __module_handle( self, handler, *args ):
         """Passed the "on_*" handlers through to the modules that support them"""
