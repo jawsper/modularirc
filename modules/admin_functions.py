@@ -1,5 +1,4 @@
 from ._module import _module
-import os, subprocess
 
 class admin_functions( _module ):
 	"""admin_functions: special functions for admins"""
@@ -69,21 +68,6 @@ class admin_functions( _module ):
 				self.mgr.bot.connection.mode( target, cmd + ' ' + source )
 			else:
 				self.notice( source, "Usage: !op <+|->o [<#<channel>|nicknames>]" )
-
-	# handle update git
-	def __get_base_path(self):
-		return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-	def admin_cmd_update_source( self, args, source, target, admin ):
-		"""!update_source: updates the source of the bot. does not reload the bot or the modules"""
-		self.notice( source, 'Please wait, running git...' )
-		result = subprocess.Popen( [ 'git', 'pull' ], stdout = subprocess.PIPE, cwd =self.__get_base_path()).communicate()[0]
-		return [ 'Result: ' + result.decode( 'utf-8' ) ]
-
-	def cmd_git_log(self, args, source, target, admin):
-		"""!git_log: shows last git commit"""
-		result = subprocess.Popen(['git', 'log', '-n1'], stdout=subprocess.PIPE, cwd=self.__get_base_path()).communicate()[0]
-		return result.decode('utf-8').split('\n')
 
 	# make the bot speak
 	def admin_cmd_say( self, args, source, target, admin ):
