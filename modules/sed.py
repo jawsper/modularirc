@@ -9,7 +9,7 @@ class sed( _module ):
 		self.buffer_max = 100
 	
 	def on_privmsg( self, source, target, message ):
-		m = re.match( 's/(?P<from>[^/]+)/(?P<to>.*)/$', message )
+		m = re.match( 's/(?P<from>[^/]+)/(?P<to>.*)/(?P<flags>g?)$', message )
 		if not target in self.buffer:
 			self.buffer[target] = []
 		buff = self.buffer[target]
