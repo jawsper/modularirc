@@ -5,7 +5,7 @@ class nickserv( _module ):
 	def __init__( self, mgr ):
 		_module.__init__( self, mgr, admin_only = True )
 
-	def on_welcome( self, c, e ):
+	def on_welcome(self, connection, event):
 		if self.get_config( 'password', False ):
 			self.privmsg( 'NickServ', 'IDENTIFY ' + self.get_config( 'password' ) )
 

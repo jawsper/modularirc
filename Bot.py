@@ -100,15 +100,15 @@ class Bot(irc.bot.SingleServerIRCBot):
         for m in self.__process_message(message):
             self.connection.action(target, m)
 
-    def __module_handle( self, handler, *args ):
+    def __module_handle(self, handler, **kwargs):
         """Passed the "on_*" handlers through to the modules that support them"""
         handler = 'on_' + handler
-        for ( _ , module ) in self.modules.get_loaded_modules():
-            if hasattr( module, handler ):
+        for (_ , module) in self.modules.get_loaded_modules():
+            if hasattr(module, handler):
                 try:
-                    getattr( module, handler )( *args )
+                    getattr(module, handler)(**kwargs)
                 except Exception as e:
-                    logging.debug( 'Module handler %s.%s failed: %s', _, handler, e )
+                    logging.debug('Module handler %s.%s failed: %s', _, handler, e)
 
     def __process_command( self, c, e ):
         """Process a message coming from the server."""
@@ -222,12 +222,12 @@ class Bot(irc.bot.SingleServerIRCBot):
             for ( module_name, module ) in self.modules.get_loaded_modules():
                 try:
                     if module.has_cmd( cmd ):
-                        lines = module.get_cmd( cmd )( args, source, target, admin )
+                        lines = module.get_cmd( cmd )(args=args, source=source, target=target, admin=admin)
                         if lines:
                             for line in lines:
                                 self.notice( target, line )
                     elif admin and module.has_admin_cmd( cmd ):
-                        lines = module.get_admin_cmd( cmd )( args, source, target, admin )
+                        lines = module.get_admin_cmd(cmd)(args=args, source=source, target=target, admin=admin)
                         if lines:
                             for line in lines:
                                 self.notice( source, line )
@@ -241,7 +241,7 @@ class Bot(irc.bot.SingleServerIRCBot):
         target = e.target if is_channel( e.target ) else source
         message = e.arguments[0]
 
-        self.__module_handle( 'privmsg', source, target, message )
+        self.__module_handle('privmsg', source=source, target=target, message=message)
         try:
             self.__process_command( c, e )
         except BotExitException as e:
@@ -267,11 +267,11 @@ class Bot(irc.bot.SingleServerIRCBot):
         target = e.target
         message = e.arguments[0]
         logging.debug('notice! source: {}, target: {}, message: {}'.format(source, target, message))
-        self.__module_handle('notice', source, target, message)
+        self.__module_handle('notice', source=source, target=target, message=message)
 
-    def on_join(self, c, e):
-        self.connection.names([e.target])
-        self.__module_handle('join', c, e)
+    def on_join(self, connection, event):
+        self.connection.names([event.target])
+        self.__module_handle('join', connection=connection, event=event)
 
     def on_part(self, c, e):
         self.connection.names([e.target])
@@ -296,11 +296,10 @@ class Bot(irc.bot.SingleServerIRCBot):
         logging.debug( "on_nicknameinuse" )
         c.nick( c.get_nickname() + "_" )
 
-    def on_welcome( self, c, e ):
-        logging.debug( "on_welcome" )
+    def on_welcome(self, connection, event):
         for chan in self.current_server['channels']:
-            c.join( chan )
-        self.__module_handle( 'welcome', c, e )
+            connection.join( chan )
+        self.__module_handle('welcome', connection=connection, event=event)
 
     def get_config_groups( self ):
         resultset = self.db.execute( 'select distinct `group` from config' )

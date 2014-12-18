@@ -15,17 +15,17 @@ class reminder( _module ):
     def __del__(self):
         self.set_config('reminders', json.dumps(self.reminders))
 
-    def on_join(self, c, e):
-        name = e.source.nick
-        if name is not c.get_nickname():
+    def on_join(self, connection, event):
+        name = event.source.nick
+        if name is not connection.get_nickname():
             name = name.lower()
-            logging.debug('%s joined %s', name, e.target)
+            logging.debug('%s joined %s', name, event.target)
             if name in self.reminders:
                 for sender, reminder in self.reminders[name].items():
-                    self.notice(e.target, 'Welcome {}, <{}> said this at {date} for you: {message}'.format(e.source.nick, sender, **reminder))
+                    self.notice(event.target, 'Welcome {}, <{}> said this at {date} for you: {message}'.format(event.source.nick, sender, **reminder))
                 del self.reminders[name]
 
-    def cmd_reminder(self, args, source, target, admin):
+    def cmd_reminder(self, args, source, **kwargs):
         """!reminder <name> [<message>]: send <name> a message when they join, if message is empty then reminder will be cleared."""
         if len(args) < 1:
             return [self.cmd_reminder.__doc__]
