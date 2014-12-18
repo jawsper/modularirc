@@ -1,0 +1,17 @@
+{
+	"version": "1.0",
+	"servers":
+	[
+		{
+			"nickname": "",
+			"host": "",
+			"port": 0,
+			"ssl": false,
+			"ipv6": false,
+			"password": "",
+			"channels": [],
+			"admin_channels": [],
+			"global_admins": []
+		}
+	]
+}
