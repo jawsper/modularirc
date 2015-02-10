@@ -5,9 +5,9 @@ import random
 class quote( _module ):
 	def cmd_quote( self, args, source, target, admin ):
 		"""!quote: to get a random quote"""
-		return [ self.__random_quote() ]
+		return [ self.random_quote() ]
 
-	def __random_quote( self ):
+	def random_quote( self ):
 		"""Read a quote from a text file"""
 		try:
 			with open( self.get_config( 'quote_file' ), 'rt', encoding = 'utf-8' ) as fd:
