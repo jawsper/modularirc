@@ -282,11 +282,11 @@ class Bot(irc.bot.SingleServerIRCBot):
     def on_mode( self, c, e ):
         self.connection.names( [e.target] )
 
-    def on_namreply( self, c, e ):
-        chan = e.arguments[1]
-        people = e.arguments[2].rstrip().split( ' ' )
-        ops = [ p[1:] for p in people if p[0] == '@' ]
-        self.channel_ops[ chan ] = ops
+    def on_endofnames(self, c, e):
+        channel, text = e.arguments
+        if not channel in self.channels:
+            return
+        self.channel_ops[channel] = list(self.channels[channel].opers())
 
     def on_nick(self, c, e):
         self.connection.names(self.channels.keys())
