@@ -1,6 +1,8 @@
 import pkgutil, os, sys
 from imp import reload
 
+from ._module import _module as Module
+
 def get_modules():
 	"""Returns all modules that are found in the current package.
 	Excludes modules starting with '_'"""
