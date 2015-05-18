@@ -82,7 +82,7 @@ class MACDatabase(OrderedDict):
             if not os.path.isfile(filename):
                 with open(filename, 'wb') as f:
                     f.write(urllib.request.urlopen(self.WIRESHARK_DB_URL).read())
-        with open(filename, 'r') as f:
+        with open(filename, 'r', encoding='utf-8') as f:
             for line in f.readlines():
                 line = line.strip()
                 if len(line) == 0:
