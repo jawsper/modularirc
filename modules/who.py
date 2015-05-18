@@ -12,13 +12,20 @@ class who(Module):
 		}
 		try:
 			config['hosts'] = json.loads(self.get_config('hosts'))
-		except:
+		except Exception as e:
+			print(str(e))
 			config['hosts'] = []
-		self.ubus_rpc = ubusrpc.Main(config)
-		self.ubus_rpc.update()
+		try:
+			self.ubus_rpc = ubusrpc.Main(config)
+			self.ubus_rpc.update()
+		except Exception as e:
+			import traceback
+			traceback.print_stack()
+			raise e
 
 	def cmd_who(self, **kwargs):
 		"""!who: see who's here"""
+		print('who')
 		self.ubus_rpc.update()
 		if len(self.ubus_rpc.clients) == 0:
 			return ['No-one is on the wifi.']
