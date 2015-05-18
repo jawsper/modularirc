@@ -51,9 +51,7 @@ class UbusRPC:
 
     def post(self, method, *args):
         postdata = json.dumps({"method": method, 'params': args, 'id':'1', 'jsonrpc': '2.0'}).encode('utf-8')
-        print(postdata)
         respdata = urllib.request.urlopen(self.url, postdata).read()
-        print(respdata)
         resp = json.loads(respdata.decode('utf-8'))
         if 'error' in resp and resp['error'] != None:
             raise JSONRPCException(resp['error'])
@@ -149,7 +147,6 @@ class UbusHost:
     def __init__(self, hostname, username, password):
         self.devices = OrderedDict()
         self.rpc = UbusRPC(hostname, username, password)
-        # print(hostname)
         self.load_devices()
 
     def load_devices(self):
@@ -192,10 +189,6 @@ class Main:
         for ubus in self.ubus_hosts:
             for device, clients in ubus.get_assoclist().items():
                 self.clients.extend(clients)
-                # for client in clients:
-                #     self.clients[mac] = client
-            # print('assoc:', clients)
-            # print('dhcp:', dict(ubus.get_dhcp_leases()))
             self.dhcp.update(ubus.get_dhcp_leases())
 
     def output(self):
