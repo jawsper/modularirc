@@ -288,8 +288,8 @@ class Bot(irc.bot.SingleServerIRCBot):
             return
         self.channel_ops[channel] = list(self.channels[channel].opers())
 
-    def on_nick(self, c, e):
-        self.connection.names(self.channels.keys())
+    # def on_nick(self, c, e):
+    #     self.connection.names(self.channels.keys())
 
     def on_nicknameinuse( self, c, e ):
         """Gets called if the server complains about the name being in use. Tries to set the nick to nick + '_'"""
