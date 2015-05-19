@@ -320,7 +320,7 @@ class Bot(irc.bot.SingleServerIRCBot):
             if value == None:
                 if default != None:
                     return default
-                raise Exception
+                raise Exception('Value not found')
             return value[0]
 
     def set_config( self, group, key, value ):
