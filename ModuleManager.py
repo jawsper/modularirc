@@ -1,12 +1,22 @@
 import modules
 import logging
 
+class ModuleLoadException(Exception):
+	def __init__(self, exception):
+		super().__init__()
+		self.exception = exception
+	def __str__(self):
+		return 'ModuleLoadException({})'.format(self.exception)
+
 class ModuleManager( object ):
-	def __init__( self, bot ):
+	def __init__(self, bot, blacklist=None):
 		self.bot = bot
 		self.modules = {}
 		self.loaded_modules = {}
+		self.blacklist = blacklist or []
 		for module_name in modules.get_modules():
+			if module_name in blacklist:
+				continue
 			logging.info( 'Loading module {0}: {1}'.format( module_name, self.add_module( module_name ) ) )
 
 	def unload( self ):
@@ -78,6 +88,7 @@ class ModuleManager( object ):
 		try:
 			self.loaded_modules[ module_name ] = self.modules[ module_name ]( self )
 		except Exception as e:
+			raise ModuleLoadException(e)
 			return 'Module {} failed to load: {}'.format( module_name, e )
 		return 'Module {} enabled'.format( module_name )
 
