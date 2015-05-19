@@ -13,7 +13,7 @@ class ModuleManager( object ):
 		self.bot = bot
 		self.modules = {}
 		self.loaded_modules = {}
-		self.blacklist = blacklist or []
+		blacklist = blacklist or []
 		for module_name in modules.get_modules():
 			if module_name in blacklist:
 				continue
