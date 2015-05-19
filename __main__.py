@@ -9,7 +9,7 @@ from imp import reload
 
 pid_file = os.path.join( os.path.dirname( __file__ ), 'ircbot.pid' )
 logging_file = os.path.join( os.path.dirname( __file__ ), 'ircbot.log' )
-logging_level = logging.DEBUG
+logging_level = logging.INFO
 logging_format = '[%(asctime)s] %(levelname)s: %(message)s'
 
 if __name__ == '__main__':

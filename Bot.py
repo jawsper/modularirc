@@ -26,7 +26,7 @@ class BotExitException( Exception ):
 class Bot(irc.bot.SingleServerIRCBot):
     """The main brain of the IRC bot."""
     def __init__( self ):
-        logging.debug('Bot __init__')
+        logging.info('Bot __init__')
         self.last_msg = -1
         self.msg_flood_limit = 0.25
 
@@ -43,7 +43,8 @@ class Bot(irc.bot.SingleServerIRCBot):
         except sqlite3.OperationalError: # table no exist
             cursor.execute( 'create table config ( `group` varchar(100), `key` varchar(100), `value` varchar(100) NULL )' )
         cursor.close()
-        self.modules = ModuleManager( self )
+        modules_blacklist = data.get('blacklist', None)
+        self.modules = ModuleManager(self, modules_blacklist)
 
         self.channel_ops = {}
 
@@ -307,7 +308,7 @@ class Bot(irc.bot.SingleServerIRCBot):
 
     def get_config( self, group, key = None, default = None ):
         """gets a config value"""
-        logging.debug( 'get config %s.%s', group, key )
+        logging.info( 'get config %s.%s', group, key )
         if key == None:
             resultset = self.db.execute( 'select `key`, `value` from config where `group` = :group', { 'group': group } )
             values = {}
@@ -325,7 +326,7 @@ class Bot(irc.bot.SingleServerIRCBot):
 
     def set_config( self, group, key, value ):
         """sets a config value"""
-        logging.debug( 'set config %s.%s to "%s"', group, key, value )
+        logging.info( 'set config %s.%s to "%s"', group, key, value )
         cursor = self.db.cursor()
         data = { 'group': group, 'key': key, 'value': value }
         if value == None:
