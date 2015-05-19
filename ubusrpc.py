@@ -18,28 +18,31 @@ class LoginError(Exception):
         return 'LoginError: {}'.format(self.error)
 
 class UbusRPC:
-    session_id = '00000000000000000000000000000000'
+    DEFAULT_SESSION_ID = '00000000000000000000000000000000'
 
     def __init__(self, url, username, password):
+        self.session_id = UbusRPC.DEFAULT_SESSION_ID
         self.url = url
         self.username = username
         self.password = password
-        # self.login()
 
     def login(self):
-        result_code, result = self.call('session', 'login', {'username': self.username, 'password': self.password})
+        self.session_id = UbusRPC.DEFAULT_SESSION_ID
+        try:
+            result = self.post('call', self.session_id, 'session', 'login', {'username': self.username, 'password': self.password})
+        except JSONRPCException as e:
+            raise LoginError(e.error)
 
-        # print(result)
-        if 'ubus_rpc_session' in result:
-            self.session_id = result['ubus_rpc_session']
+        if 'ubus_rpc_session' in result[1]:
+            self.session_id = result[1]['ubus_rpc_session']
         else:
-            raise LoginError(result)
+            raise LoginError(result[1])
     def call(self, *args):
         try:
             return self.post('call', self.session_id, *args)
         except JSONRPCException as e:
             if 'code' in e.error and e.error['code'] == -32002:
-                # login failed
+                # login expired
                 try:
                     self.login()
                     return self.post('call', self.session_id, *args)
