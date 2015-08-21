@@ -1,7 +1,7 @@
-from ._module import _module
+from modules import Module
 import json
 
-class karma( _module ):
+class karma(Module):
     """karma: give or take karma. karma is given with !<something><operator> # <reason>. <operator> is ++ or --, reason is optional """
     def __init__( self, mgr ):
         super( karma, self ).__init__( mgr )
@@ -57,8 +57,8 @@ class karma( _module ):
         if len( self.karma ) == 0:
             return [ 'No karma given out yet. (Maybe you should!)' ]
         return [
-            'Karma:'
-        ] + [ ' * {0}: {1}'.format( item_karma1[0], item_karma1[1] ) for item_karma1 in self.total_karma().items() ]
+            'Karma: {}'.format('; '.join(['{}: {}'.format(*item_karma) for item_karma in self.total_karma().items()]))
+        ]
 
     def cmd_karmawhy( self, args, source, target, admin ):
         """!karmawhy [<what>]: show last karma, optionally for item name"""
