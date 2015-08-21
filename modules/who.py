@@ -6,6 +6,7 @@ import os
 import re
 from collections import OrderedDict
 import time
+import logging
 
 class who(Module):
     """who: see who's here"""
@@ -36,6 +37,20 @@ class who(Module):
             return ['No-one is on the wifi.']
         else:
             return ['{} wifi client(s) online currently.'.format(len(self.ubus_rpc.clients))]
+
+    def admin_cmd_who_there(self, **kwargs):
+        """!who_there: view who's actually there"""
+        self.ubus_rpc.update()
+        if len(self.ubus_rpc.clients) == 0:
+            return ['No-one is on the wifi.']
+        else:
+            # client_str = '; '.join()
+            client_to_dhcp = {}
+            for client in self.ubus_rpc.clients:
+                if client.mac in self.ubus_rpc.dhcp:
+                    client_to_dhcp[client.mac] = self.ubus_rpc.dhcp[client.mac]['name']
+            return ['Currently {} clients connected: {}'.format(len(self.ubus_rpc.clients), ', '.join(client_to_dhcp.values()))]
+
 
 class JSONRPCException(Exception):
     def __init__(self, rpcError):
@@ -180,7 +195,6 @@ class UbusHost:
     def __init__(self, hostname, username, password):
         self.devices = OrderedDict()
         self.rpc = UbusRPC(hostname, username, password)
-        self.load_devices()
 
     def load_devices(self):
         result = self.rpc.call('iwinfo', 'devices', {})
@@ -215,6 +229,10 @@ class Main:
     def client_add(self, ubus):
         u = UbusHost('http://{}/ubus'.format(ubus['hostname']), ubus['username'], ubus['password'])
         self.ubus_hosts.append(u)
+        try:
+            u.load_devices()
+        except Exception as e:
+            logging.exception('Cannot load devices: {}'.format(e))
 
     def update(self):
         self.clients = []
