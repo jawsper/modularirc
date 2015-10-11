@@ -30,27 +30,19 @@ class who(Module):
 
         self.ubus_rpc = Main(config)
 
-    def cmd_who(self, **kwargs):
+    def cmd_who(self, source, target, admin, **kwargs):
         """!who: see who's here"""
         self.ubus_rpc.update()
         if len(self.ubus_rpc.clients) == 0:
             return ['No-one is on the wifi.']
         else:
-            return ['{} wifi client(s) online currently.'.format(len(self.ubus_rpc.clients))]
-
-    def admin_cmd_who_there(self, **kwargs):
-        """!who_there: view who's actually there"""
-        self.ubus_rpc.update()
-        if len(self.ubus_rpc.clients) == 0:
-            return ['No-one is on the wifi.']
-        else:
-            # client_str = '; '.join()
-            client_to_dhcp = {}
-            for client in self.ubus_rpc.clients:
-                if client.mac in self.ubus_rpc.dhcp:
-                    client_to_dhcp[client.mac] = self.ubus_rpc.dhcp[client.mac]['name']
-            return ['Currently {} clients connected: {}'.format(len(self.ubus_rpc.clients), ', '.join(client_to_dhcp.values()))]
-
+            self.notice(target, '{} wifi client(s) online currently.'.format(len(self.ubus_rpc.clients)))
+            if admin:
+                client_to_dhcp = {}
+                for client in self.ubus_rpc.clients:
+                    if client.mac in self.ubus_rpc.dhcp:
+                        client_to_dhcp[client.mac] = self.ubus_rpc.dhcp[client.mac]['name']
+                self.notice(source, 'Client list: {}'.format(', '.join(client_to_dhcp.values())))
 
 class JSONRPCException(Exception):
     def __init__(self, rpcError):
