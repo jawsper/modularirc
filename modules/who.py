@@ -42,6 +42,8 @@ class who(Module):
                 for client in self.ubus_rpc.clients:
                     if client.mac in self.ubus_rpc.dhcp:
                         client_to_dhcp[client.mac] = self.ubus_rpc.dhcp[client.mac]['name']
+                    else:
+                        client_to_dhcp[client.mac] = '[{}]'.format(client.mac)
                 self.notice(source, 'Client list: {}'.format(', '.join(client_to_dhcp.values())))
 
 class JSONRPCException(Exception):
