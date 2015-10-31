@@ -1,20 +1,34 @@
-from ._module import _module
+from modules import Module
+import glob
+import os
 import logging
 import random
 
-class quote( _module ):
-	def cmd_quote( self, args, source, target, admin ):
-		"""!quote: to get a random quote"""
-		return [ self.random_quote() ]
+class quote(Module):
+    def cmd_quote( self, args, source, target, admin ):
+        """!quote: to get a random quote"""
+        quote = self.random_quote()
+        if quote:
+            return [quote]
 
-	def random_quote( self ):
-		"""Read a quote from a text file"""
-		try:
-			with open( self.get_config( 'quote_file' ), 'rt', encoding = 'utf-8' ) as fd:
-				return random.choice( fd.readlines() )
-		except IOError as e:
-			logging.exception( 'Quote IOError' )
-			return 'Error: quote file not found: {}'.format( e )
-		except:
-			logging.exception( 'Quote Exception' )
-			return 'Error: no quote file defined'
+    def random_quote( self ):
+        """Read a quote from a text file"""
+        try:
+            quote_dir = self.get_config('path')
+        except:
+            return 'Error: path not set'
+        try:
+            files = glob.glob(os.path.join(quote_dir, '*.txt'))
+            quotes = []
+            for filename in files:
+                with open(filename, 'rt', encoding='utf-8') as f:
+                    quotes.extend(f.readlines())
+            return random.choice(quotes)
+            # with open( self.get_config( 'quote_file' ), 'rt', encoding = 'utf-8' ) as fd:
+                # return random.choice( fd.readlines() )
+        except IOError as e:
+            logging.exception( 'Quote IOError' )
+            return 'Error: quote file not found: {}'.format( e )
+        except:
+            logging.exception( 'Quote Exception' )
+            return 'Error: no quote file defined'
