@@ -117,10 +117,12 @@ class Bot(irc.bot.SingleServerIRCBot):
         # commands have to start with !
         if message[0] != '!':
             return
-        # strip the ! off, and split the message
-        args = message[1:].split()
-        # cmd is the first item
-        cmd = args.pop(0).strip()
+        # strip the ! off, and split the message into command and arguments
+        split_message = message[1:].split(None, 1)
+        cmd = split_message.pop(0).strip()
+        raw_args = split_message[0] if len(split_message) else ''
+        args = raw_args.split()
+
         # test for admin
         admin = e.source.userhost in self.admin
         if not admin:
@@ -132,7 +134,7 @@ class Bot(irc.bot.SingleServerIRCBot):
         target = e.target if is_channel(e.target) else source
 
         # see if there is a module that is willing to handle this, and make it so.
-        logging.debug( '__process_command (src: %s; tgt: %s; cmd: %s; args: %s; admin: %s)', source, target, cmd, args, admin )
+        logging.debug( '__process_command (src: %s; tgt: %s; cmd: %s; args: %s; admin: %s)', source, target, cmd, raw_args, admin )
 
         # handle die outside of module (in case module is dead :( )
         if admin:
@@ -177,7 +179,7 @@ class Bot(irc.bot.SingleServerIRCBot):
                     self.notice( source, 'Failed setting/clearing config setting: {0}'.format( e ) )
             # other base admin commands
             elif cmd == 'raw':
-                self.connection.send_raw( ' '.join( args ) )
+                self.connection.send_raw(raw_args)
                 return
             elif cmd == 'admins':
                 self.notice( source, 'Current operators:' )
@@ -223,12 +225,12 @@ class Bot(irc.bot.SingleServerIRCBot):
             for ( module_name, module ) in self.modules.get_loaded_modules():
                 try:
                     if module.has_cmd( cmd ):
-                        lines = module.get_cmd( cmd )(args=args, source=source, target=target, admin=admin)
+                        lines = module.get_cmd( cmd )(args=args, raw_args=args, source=source, target=target, admin=admin)
                         if lines:
                             for line in lines:
                                 self.notice( target, line )
                     elif admin and module.has_admin_cmd( cmd ):
-                        lines = module.get_admin_cmd(cmd)(args=args, source=source, target=target, admin=admin)
+                        lines = module.get_admin_cmd(cmd)(args=args, raw_args=args, source=source, target=target, admin=admin)
                         if lines:
                             for line in lines:
                                 self.notice( source, line )
