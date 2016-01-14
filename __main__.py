@@ -12,13 +12,13 @@ logging_file = os.path.join( os.path.dirname( __file__ ), 'ircbot.log' )
 logging_level = logging.INFO
 logging_format = '[%(asctime)s] %(levelname)s: %(message)s'
 
-if __name__ == '__main__':
+def main(argv):
     if os.path.exists( pid_file ):
         print( 'PID file exists! If the bot is not running, please delete this file before trying to start again!' )
         sys.exit( 1 )
     fork = False
-    if len( sys.argv ) > 1:
-        if sys.argv[1] == '-fork':
+    if len(argv) > 0:
+        if argv[0] == '-fork':
             fork = True
     if fork:
         logging.basicConfig( filename = logging_file, level = logging_level, format = logging_format )
@@ -33,10 +33,10 @@ if __name__ == '__main__':
                 with open( pid_file, 'w' ) as f:
                     f.write( str( pid ) )
                 print( pid )
-                sys.exit(0)
+                return 0
         except OSError as error:
             logging.error( 'Unable to fork. Error: {0} ({1})'.format( error.errno, error.strerror ) )
-            sys.exit(1)
+            return 1
     botje = Bot.Bot()
     while True:
         try:
@@ -62,3 +62,7 @@ if __name__ == '__main__':
         time.sleep( 5 )
     logging.info( 'Exiting bot...' )
     if fork: os.remove( pid_file )
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
