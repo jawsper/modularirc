@@ -20,7 +20,7 @@ class ModuleManager(object):
             logging.info('Loading module {0}: {1}'.format(module_name, self.add_module(module_name)))
 
     def unload(self):
-        for module_name in self.modules.keys():
+        for module_name in list(self.modules.keys()):
             logging.info('Unloading module {0}: {1}'.format(module_name, self.remove_module(module_name)))
 
     def reload_modules(self):
@@ -123,24 +123,11 @@ class ModuleManager(object):
             self.enable_module(module_name)
         return 'Module {} reloaded'.format(module_name)
 
-    # methods from Bot
-
-    def __getattr__(self, key):
-        if key in ('notice', 'privmsg', 'get_config', 'set_config'):
-            return getattr(self.bot, key)
-
-    # def notice(self, target, message):
-    #     self.bot.notice(target, message)
-
-    # def privmsg(self, target, message):
-    #     self.bot.privmsg(target, message)
-
-    # def get_config(self, group, key, default=None):
-    #     return self.bot.get_config(group, key, default)
-
-    # def set_config(self, group, key, value):
-    #     return self.bot.set_config(group, key, value)
-
     def get_module(self, name):
         if name in self.loaded_modules:
             return self.loaded_modules[name]
+
+    # methods from Bot
+    def __getattr__(self, key):
+        if key in ('notice', 'privmsg', 'get_config', 'set_config'):
+            return getattr(self.bot, key)
