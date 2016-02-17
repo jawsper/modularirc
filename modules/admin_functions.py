@@ -43,12 +43,12 @@ class admin_functions(Module):
 	#		):
 	#			self.notice( source, msg )
 	
-	def admin_cmd_op( self, args, source, target, admin ):
+	def admin_cmd_op(self, arglist, source, target, **kwargs):
 		"""!op <+o|-o> <args>: make or break someone as op"""
-		if len( args ) == 0:
-			return [ self.admin_cmd_op.__doc__ ]
-		cmd = args[ 0 ]
-		args = args[ 1: ]
+		if len(arglist) == 0:
+			return [self.admin_cmd_op.__doc__]
+		cmd = arglist[ 0 ]
+		args = arglist[ 1: ]
 		if cmd in ( '+o', '-o' ):
 			if len( args ) > 1:
 				dest = None
@@ -70,15 +70,15 @@ class admin_functions(Module):
 				self.notice( source, "Usage: !op <+|->o [<#<channel>|nicknames>]" )
 
 	# make the bot speak
-	def admin_cmd_say( self, args, source, target, admin ):
+	def admin_cmd_say(self, arglist, **kwargs):
 		"""!say <target> <message>: make the bot speak"""
-		self.privmsg( args.pop(0), ' '.join( args ) )
-	def admin_cmd_notice( self, args, source, target, admin ):
+		self.privmsg(arglist[0], ' '.join(arglist[1:]))
+	def admin_cmd_notice(self, arglist, **kwargs):
 		"""!notice <target> <message>: make the bot send a notice"""
-		self.notice( args.pop(0), ' '.join( args ) )
+		self.notice(arglist[0], ' '.join(arglist[1:]))
 
 	# show bot statistics
-	def admin_cmd_stats( self, args, source, target, admin ):
+	def admin_cmd_stats(self, **kwargs):
 		"""!stats: show statistics"""
 		stats = []
 		for chname, chobj in list(self.mgr.bot.channels.items()):
@@ -96,20 +96,20 @@ class admin_functions(Module):
 		return stats
 
 	# change bot nick
-	def admin_cmd_nick( self, args, source, target, admin ):
+	def admin_cmd_nick(self, arglist, **kwargs):
 		"""!nick <nick>: change the nick"""
-		self.mgr.bot.connection.nick( args[0] )
+		self.mgr.bot.connection.nick(arglist[0])
 
 	# make bot join channel(s)
-	def admin_cmd_join( self, args, source, target, admin ):
+	def admin_cmd_join(self, arglist, **kwargs):
 		"""!join <channel>[ <channel>...]: join a channel"""
-		for channel in args:
-			self.mgr.bot.connection.join( channel )
+		for channel in arglist:
+			self.mgr.bot.connection.join(channel)
 
 	# make bot leave channel(s)
-	def admin_cmd_part( self, args, source, target, admin ):
+	def admin_cmd_part(self, arglist, target, **kwargs):
 		"""!part [<channel>]: part this or a specific channel"""
-		if len( args ) > 0:
-			self.mgr.bot.connection.part( args )
+		if len(arglist) > 0:
+			self.mgr.bot.connection.part(arglist)
 		elif target[0] == '#':
-			self.mgr.bot.connection.part( target )
+			self.mgr.bot.connection.part(target)
