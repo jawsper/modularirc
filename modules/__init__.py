@@ -47,9 +47,9 @@ class Module(object):
 	def get_cmd_list(self, prefix='cmd_'):
 		return ['!{0}'.format(cmd[len(prefix):]) for cmd in dir(self) if cmd.startswith(prefix)]
 	def has_cmd(self, cmd, prefix='cmd_'):
-		return hasattr(self, 'cmd_{0}'.format(cmd))
+		return hasattr(self, '{}{}'.format(prefix, cmd))
 	def get_cmd( self, cmd, prefix='cmd_'):
-		return getattr(self, 'cmd_{0}'.format(cmd))
+		return getattr(self, '{}{}'.format(prefix, cmd))
 
 	def get_admin_cmd_list(self):
 		return self.get_cmd_list(prefix='admin_cmd_')
