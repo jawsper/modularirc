@@ -6,16 +6,15 @@ import base64
 from datetime import datetime
 from dateutil.tz import tzlocal
 import dateutil.parser
-from ._module import _module
+from modules import Module
 import logging
 
 class NsApiException(Exception):
 	pass
 
-class ns( _module ):
+class ns(Module):
 	"""ns: Bot module to use the NS (Nederlandse Spoorwegen) API"""
-	def __init__( self, mgr ):
-		super( ns, self ).__init__( mgr )
+	def start(self):
 		self.username = self.password = None
 		
 		try:

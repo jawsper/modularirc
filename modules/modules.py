@@ -1,8 +1,8 @@
-from ._module import _module
+from modules import Module
 
-class modules( _module ):
-	def __init__( self, mgr ):
-		_module.__init__( self, mgr, admin_only = True )
+class modules(Module):
+	def __init__(self, mgr):
+		super().__init__(mgr, admin_only=True)
 
 	def admin_cmd_modules( self, args, source, target, admin ):
 		"""!modules: get all modules"""

@@ -1,4 +1,4 @@
-from ._module import _module
+from modules import Module
 import re
 import logging
 import urllib.request
@@ -55,9 +55,9 @@ class WorkerThread(threading.Thread):
             r.close()
     def reply(self, message):
         self.module.notice(self.target, '{}: {}'.format(self.source, message))
-        
 
-class url_scanner(_module):
+
+class url_scanner(Module):
     def on_privmsg(self, source, target, message):
         m = re.search(r'(https?://\S+)', message)
         if m:

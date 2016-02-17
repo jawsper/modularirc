@@ -1,10 +1,9 @@
-from ._module import _module
+from modules import Module
 import re
 
-class sed( _module ):
+class sed(Module):
 	"""sed: implements sed's s// partially."""
-	def __init__( self, mgr ):
-		super( sed, self ).__init__( mgr )
+	def start(self):
 		self.buffer = {}
 		self.buffer_max = 100
 	

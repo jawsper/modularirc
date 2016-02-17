@@ -1,13 +1,12 @@
-from ._module import _module
+from modules import Module
 import logging
 import json
 
 from datetime import datetime
 from dateutil.tz import tzlocal
 
-class reminder( _module ):
-    def __init__(self, mgr):
-        _module.__init__(self, mgr)
+class reminder(Module):
+    def start(self):
         try:
             self.reminders = json.loads(self.get_config('reminders'))
         except:

@@ -1,17 +1,15 @@
 
 import os, json, pickle, re
 import http.client, urllib.request, urllib.parse, urllib.error
-from ._module import _module
+from modules import Module
 
-class google( _module ):
+class google(Module):
 	"""Bot module to search on google"""
 	google_cache_file = os.path.expanduser( '~/.google_cache' )
-	
-	def __init__( self, mgr ):
-		_module.__init__( self, mgr )
-		
+
+	def start(self):
 		self.api_key = self.cx = None
-		
+
 		try:
 			self.api_key = self.get_config( 'api_key' )
 			self.cx = self.get_config( 'cx' )

@@ -1,9 +1,9 @@
-from ._module import _module
+from modules import Module
 
-class nickserv( _module ):
+class nickserv(Module):
 	"""nickserv: automatically auth with nickserv"""
-	def __init__( self, mgr ):
-		_module.__init__( self, mgr, admin_only = True )
+	def __init__(self, mgr):
+		super().__init__(mgr, admin_only=True)
 
 	def on_welcome(self, connection, event):
 		if self.get_config( 'password', False ):
