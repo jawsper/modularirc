@@ -48,13 +48,13 @@ class event(Module):
         self.event.participants = []
         return ['Event cleared.']
 
-    def cmd_join(self, args, source, target, admin):
+    def cmd_join(self, arglist, source, **kwargs):
         """!join: join current event"""
         if not self.event.name:
             return ['No event currently']
 
-        if len(args) > 0:
-            name = args[0]
+        if len(arglist) > 0:
+            name = arglist[0]
             if self.event.join(name):
                 return ['Thank you for adding "{}".'.format(name)]
             else:
@@ -65,13 +65,13 @@ class event(Module):
             else:
                 return ['You are already participating.']
 
-    def cmd_leave(self, args, source, target, admin):
+    def cmd_leave(self, arglist, source, **kwargs):
         """!leave: leave current event"""
         if not self.event.name:
             return ['No event currently']
 
-        if len(args) > 0:
-            name = args[0]
+        if len(arglist) > 0:
+            name = arglist[0]
             if self.event.leave(name):
                 return ['Thank you for removing "{}".'.format(name)]
             else:

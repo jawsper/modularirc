@@ -52,7 +52,7 @@ class karma(Module):
             items[ item ] += evt['mutation']
         return items
     
-    def cmd_karma( self, args, source, target, admin ):
+    def cmd_karma(self, **kwargs):
         """!karma: shows all karma"""
         if len( self.karma ) == 0:
             return [ 'No karma given out yet. (Maybe you should!)' ]
@@ -60,15 +60,15 @@ class karma(Module):
             'Karma: {}'.format('; '.join(['{}: {}'.format(*item_karma) for item_karma in self.total_karma().items()]))
         ]
 
-    def cmd_karmawhy( self, args, source, target, admin ):
+    def cmd_karmawhy(self, arglist,  **kwargs):
         """!karmawhy [<what>]: show last karma, optionally for item name"""
         if len( self.karma ) == 0:
             return [ 'No karma given out yet. (Maybe you should!)' ]
         karma_format = '{source} gave "{item}" {mutation} because "{comment}"'
-        if len( args ) == 0:
+        if len( arglist ) == 0:
             return [ 'Last karma: ', karma_format.format( **self.karma[ -1 ] ) ]
-        elif len( args ) == 1:
-            item = args[0]
+        elif len( arglist ) == 1:
+            item = arglist[0]
             karma = self.item_karma_list( item )
             if len( karma ) == 0:
                 return [ 'Karma has not been applied to "{0}"'.format( item ) ]

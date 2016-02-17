@@ -29,12 +29,12 @@ class ns(Module):
 			logging.warning( 'Loading stations failed: %s', e )
 			raise e
 		
-	def cmd_ns( self, args, source, target, admin ):
+	def cmd_ns(self, arglist, **kwargs):
 		"""!ns <command>: search train connections (send !ns help for more details)"""
-		if len( args ) > 0 and args[0] != 'help':
+		if len( arglist ) > 0 and arglist[0] != 'help':
 			try:
-				subcmd = args[0]
-				args = args[1:]
+				subcmd = arglist[0]
+				args = arglist[1:]
 				strarg = ' '.join( args )
 				if subcmd == 'plan':
 					return self.__plan_route( args )
