@@ -25,6 +25,9 @@ class BotExitException( Exception ):
 
 class Bot(irc.bot.SingleServerIRCBot):
     """The main brain of the IRC bot."""
+
+    BOT_CFG_KEY = '_Bot'
+
     def __init__( self ):
         logging.info('Bot __init__')
         self.last_msg = -1
@@ -121,7 +124,7 @@ class Bot(irc.bot.SingleServerIRCBot):
         split_message = message[1:].split(None, 1)
         cmd = split_message.pop(0).strip()
         raw_args = split_message[0] if len(split_message) else ''
-        args = raw_args.split()
+        arglist = raw_args.split()
 
         # test for admin
         admin = e.source.userhost in self.admin
@@ -146,34 +149,34 @@ class Bot(irc.bot.SingleServerIRCBot):
             elif cmd == 'restart_class':
                 raise BotReloadException
             # config commands
-            elif cmd == 'get_config' and len( args ) <= 2:
-                if len( args ) == 2:
+            elif cmd == 'get_config' and len( arglist ) <= 2:
+                if len( arglist ) == 2:
                     try:
-                        value = self.get_config( args[0], args[1] )
-                        self.notice( source, 'config[{0}][{1}] = {2}'.format( args[0], args[1], value ) )
+                        value = self.get_config( arglist[0], arglist[1] )
+                        self.notice( source, 'config[{0}][{1}] = {2}'.format( arglist[0], arglist[1], value ) )
                     except:
-                        self.notice( source, 'config[{0}][{1}] not set'.format( *args ) )
-                elif len( args ) == 1:
+                        self.notice( source, 'config[{0}][{1}] not set'.format( *arglist ) )
+                elif len( arglist ) == 1:
                     try:
-                        values = self.get_config( args[0] )
+                        values = self.get_config( arglist[0] )
                         if len( values ) > 0:
-                            self.notice( source, 'config[{}]: '.format( args[0] ) + ', '.join( [ '{}: "{}"'.format( k,v ) for ( k, v ) in values.items() ] ) )
+                            self.notice( source, 'config[{}]: '.format( arglist[0] ) + ', '.join( [ '{}: "{}"'.format( k,v ) for ( k, v ) in values.items() ] ) )
                         else:
-                            self.notice( source, 'config[{}] is empty'.format( args[0] ) )
+                            self.notice( source, 'config[{}] is empty'.format( arglist[0] ) )
                     except:
-                        self.notice( source, 'config[{}] not set'.format( args[0] ) )
+                        self.notice( source, 'config[{}] not set'.format( arglist[0] ) )
                 else:
                     try:
                         self.notice( source, 'config groups: ' + ', '.join( self.get_config_groups() ) )
                     except Exception as e:
                         self.notice( source, 'No config groups: {}'.format( e ) )
-            elif cmd == 'set_config' and len( args ) >= 2:
-                if len( args ) >= 3:
-                    config_val = ' '.join( args[2:] )
+            elif cmd == 'set_config' and len( arglist ) >= 2:
+                if len( arglist ) >= 3:
+                    config_val = ' '.join( arglist[2:] )
                 else:
                     config_val = None
                 try:
-                    self.set_config( args[0], args[1], config_val )
+                    self.set_config( arglist[0], arglist[1], config_val )
                     self.notice( source, 'Set config setting' if config_val else 'Cleared config setting' )
                 except Exception as e:
                     self.notice( source, 'Failed setting/clearing config setting: {0}'.format( e ) )
@@ -189,17 +192,17 @@ class Bot(irc.bot.SingleServerIRCBot):
                 return
 
         if cmd == 'help':
-            if len( args ) > 0:
-                if args[0] == 'module':
-                    if len( args ) < 2:
+            if len( arglist ) > 0:
+                if arglist[0] == 'module':
+                    if len( arglist ) < 2:
                         pass
-                    elif self.modules.module_is_loaded( args[1] ):
-                        module = self.modules.get_module( args[1] )
+                    elif self.modules.module_is_loaded( arglist[1] ):
+                        module = self.modules.get_module( arglist[1] )
                         self.notice( target, module.__doc__ )
                 else:
                     for ( module_name, module ) in self.modules.get_loaded_modules():
-                        if module.has_cmd( args[0] ):
-                            self.notice( target, module.get_cmd( args[0] ).__doc__ )
+                        if module.has_cmd( arglist[0] ):
+                            self.notice( target, module.get_cmd( arglist[0] ).__doc__ )
             else:
                 self.notice( target, '!help: this help text (send !help <command> for command help, send !help module <module> for module help)' )
                 for ( module_name, module ) in [ lst for lst in self.modules.get_loaded_modules() if lst[1].has_commands and not lst[1].admin_only ]:
@@ -207,10 +210,10 @@ class Bot(irc.bot.SingleServerIRCBot):
                     self.notice( target, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) if len( cmds ) > 0 else 'No commands' ) )
 
         elif admin and cmd == 'admin_help':
-            if len( args ) > 0:
+            if len( arglist ) > 0:
                 for ( module_name, module ) in self.modules.get_loaded_modules():
-                    if module.has_admin_cmd( args[0] ):
-                        self.notice( source, module.get_admin_cmd( args[0] ).__doc__ )
+                    if module.has_admin_cmd( arglist[0] ):
+                        self.notice( source, module.get_admin_cmd( arglist[0] ).__doc__ )
             else:
                 self.notice( source, '!admin_help: this help text (send !admin_help <command> for command help' )
                 self.notice( source, '!die:                                   kill the bot' )
@@ -225,12 +228,12 @@ class Bot(irc.bot.SingleServerIRCBot):
             for ( module_name, module ) in self.modules.get_loaded_modules():
                 try:
                     if module.has_cmd( cmd ):
-                        lines = module.get_cmd( cmd )(args=args, raw_args=args, source=source, target=target, admin=admin)
+                        lines = module.get_cmd( cmd )(args=arglist, arglist=arglist, raw_args=raw_args, source=source, target=target, admin=admin)
                         if lines:
                             for line in lines:
                                 self.notice( target, line )
                     elif admin and module.has_admin_cmd( cmd ):
-                        lines = module.get_admin_cmd(cmd)(args=args, raw_args=args, source=source, target=target, admin=admin)
+                        lines = module.get_admin_cmd(cmd)(args=arglist, arglist=arglist, raw_args=raw_args, source=source, target=target, admin=admin)
                         if lines:
                             for line in lines:
                                 self.notice( source, line )
