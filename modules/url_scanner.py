@@ -1,10 +1,10 @@
 from modules import Module
 import re
 import logging
-import urllib.request
 from hurry.filesize import size as filesize
 import html.parser
 import threading
+import requests
 
 class WorkerThread(threading.Thread):
     def __init__(self, module, source, target, url):
@@ -14,26 +14,33 @@ class WorkerThread(threading.Thread):
         self.target = target
         self.url = url
     def run(self):
-        r = urllib.request.urlopen(self.url)
-        if not 'Content-Type' in r.headers:
+        try:
+            r = requests.get(self.url, stream=True)
+        except:
+            logging.exception('Exception in url_scanner')
             return
-        content_type_header = [x.strip() for x in r.headers['Content-Type'].split(';')]
-        mime_type = content_type_header[0]
+
+        mime_type = None
         encoding = None
-        for param in content_type_header[1:]:
-            if param.startswith('charset='):
-                encoding = param[param.index('=')+1:]
+        if 'Content-Type' in r.headers:
+            content_type_header = [x.strip() for x in r.headers['Content-Type'].split(';')]
+            mime_type = content_type_header[0]
+            for param in content_type_header[1:]:
+                if param.startswith('charset='):
+                    encoding = param[param.index('=')+1:]
+        else:
+            mime_type = 'unknown/unknown'
+
         try:
             logging.debug(mime_type)
             if mime_type == 'text/html':
                 logging.debug(encoding)
-                content = r.read(1024).decode(encoding or 'ascii')
-                while not re.search('</title>', content, re.I):
-                    _ = r.read(1024)
-                    if not _:
+                response_content = ''
+                for content in r.iter_content(1024):
+                    response_content += content.decode(encoding or 'ascii')
+                    if '</title>' in response_content:
                         break
-                    content += _.decode(encoding or 'ascii')
-                title = re.search(r'<title>(.+)</title>', content, re.S | re.I)
+                title = re.search(r'<title>(.+)</title>', response_content, re.S | re.I)
                 if title:
                     title = title.groups(1)[0].strip()
                     h = html.parser.HTMLParser()
@@ -43,14 +50,14 @@ class WorkerThread(threading.Thread):
                     self.reply('No title found on page...')
             elif mime_type.startswith('image/'):
                 try:
-                    size = get_image_size2(int(r.headers['Content-Length']), r)
+                    size = get_image_size2(int(r.headers['Content-Length']), r.raw)
                     self.reply('Image [{}]: dimensions {} x {}'.format(mime_type.split('/')[1], size[0], size[1]))
                 except Exception as e:
-                    print(e.msg)
+                    logging.exception('Failed to determine image size')
             else:
-                self.reply('Content type: {}, size: {}'.format(r.headers['Content-Type'], filesize(int(r.headers['Content-Length']))))
+                self.reply('Content type: "{}", size: "{}"'.format(r.headers['Content-Type'], filesize(int(r.headers['Content-Length']))))
         except:
-            logging.exception('Errorrr')
+            logging.exception('Exception in reading response content')
         finally:
             r.close()
     def reply(self, message):
