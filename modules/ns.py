@@ -105,7 +105,6 @@ class ns(Module):
         return list
     
     def __plan_route( self, args ):
-        print( '__plan_route( {0} )'.format( args ) )
         fromStation = toStation = viaStation = None
         
         args = [x.lower() for x in args]
