@@ -1,7 +1,6 @@
-
-import http.client, urllib.request, urllib.parse, urllib.error
+import requests
+import urllib.parse
 import xml.etree.ElementTree as ET
-import traceback
 import base64
 from datetime import datetime
 from dateutil.tz import tzlocal
@@ -21,13 +20,12 @@ class ns(Module):
             self.username = self.get_config( 'username' )
             self.password = self.get_config( 'password' )
         except:
-            raise Exception
+            return
         
         try:
             self.stations = self.__station_list()
         except Exception as e:
-            logging.warning( 'Loading stations failed: %s', e )
-            raise e
+            logging.exception('Loading stations failed')
         
     def cmd_ns(self, arglist, **kwargs):
         """!ns <command>: search train connections (send !ns help for more details)"""
@@ -45,7 +43,7 @@ class ns(Module):
                 elif subcmd == 'storing':
                     return self.__storingen( strarg )
             except:
-                traceback.print_exc()
+                logging.exception('Error in NS module.')
                 return [ 'Bot error\'d :(' ]
         return [
             'Usage: !ns <command> <arguments>',
@@ -57,19 +55,17 @@ class ns(Module):
         ]
 
     def __apiquery( self, api_method, args = None ):
-        conn = http.client.HTTPConnection( 'webservices.ns.nl' )
-        conn.request(
-            'GET',
-            '/{0}{1}'.format( api_method, '?' + urllib.parse.urlencode( args ) if args and len( args ) > 0 else '' ),
-            headers = { 'Authorization': 'Basic ' + base64.b64encode( '{0}:{1}'.format( self.username, self.password ).encode( 'utf-8' ) ).decode( 'utf-8' ) }
-        )
-        response = conn.getresponse()
-        data = response.read()
-        conn.close()
-        root = ET.fromstring( data )
-        if root.tag == 'error':
-            raise NsApiException( 'API error: {0}'.format( root[0].text ) )
-        return root
+        try:
+            url = urllib.parse.urlunsplit(('http', 'webservices.ns.nl', api_method, urllib.parse.urlencode(args) if args and len(args) > 0 else '', ''))
+            response = requests.get(url, headers={
+                'Authorization': 'Basic ' + base64.b64encode('{0}:{1}'.format(self.username, self.password).encode('utf-8')).decode('utf-8')
+                })
+            root = ET.fromstring(response.text)
+            if root.tag == 'error':
+                raise NsApiException('API error: {0}'.format(root[0].text))
+            return root
+        except:
+            raise NsApiException('Unable to connect to API.')
     
     def __station_list( self ):
         try:
