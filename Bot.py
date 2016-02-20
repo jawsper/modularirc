@@ -147,6 +147,7 @@ class Bot(irc.bot.SingleServerIRCBot):
             elif cmd == 'jump':
                 self.jump_server()
             elif cmd == 'restart_class':
+                self.notice(source, 'Restarting...')
                 raise BotReloadException
             # config commands
             elif cmd == 'get_config' and len( arglist ) <= 2:
