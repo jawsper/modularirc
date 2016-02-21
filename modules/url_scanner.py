@@ -53,6 +53,7 @@ class WorkerThread(threading.Thread):
                     size = get_image_size2(int(r.headers['Content-Length']), r.raw)
                     self.reply('Image [{}]: dimensions {} x {}'.format(mime_type.split('/')[1], size[0], size[1]))
                 except Exception as e:
+                    self.reply('Image [{}]: unknown size'.format(mime_type))
                     logging.exception('Failed to determine image size')
             else:
                 self.reply('Content type: "{}", size: "{}"'.format(r.headers['Content-Type'], filesize(int(r.headers['Content-Length']))))
