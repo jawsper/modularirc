@@ -37,8 +37,10 @@ class WorkerThread(threading.Thread):
                 logging.debug(encoding)
                 response_content = ''
                 for content in r.iter_content(1024):
-                    response_content += content.decode(encoding or 'ascii')
+                    response_content += content.decode(encoding or 'ascii', errors='ignore')
                     if '</title>' in response_content:
+                        break
+                    elif '</head>' in response_content: # don't bother going on when <head> ends
                         break
                 title = re.search(r'<title>(.+)</title>', response_content, re.S | re.I)
                 if title:
@@ -58,6 +60,7 @@ class WorkerThread(threading.Thread):
             else:
                 self.reply('Content type: "{}", size: "{}"'.format(r.headers['Content-Type'], filesize(int(r.headers['Content-Length']))))
         except:
+            self.reply('Exception in reading response content.')
             logging.exception('Exception in reading response content')
         finally:
             r.close()
