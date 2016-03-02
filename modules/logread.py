@@ -104,8 +104,12 @@ class logread(Module):
     def start(self):
         try:
             self.log_path = self.get_config('log_path')
+            self.network = self.get_config('network')
+            self.window = self.get_config('window')
         except:
             self.log_path = None
+            self.network = None
+            self.window = None
 
     def admin_cmd_search_log(self, raw_args, **kwargs):
         if not self.log_path:
@@ -127,7 +131,7 @@ class logread(Module):
         print(query)
 
         log_reader = ZncLogReader(self.log_path)
-        result = log_reader.search_log('freenode', '#tkkrlab', query, argv)
+        result = log_reader.search_log(self.network, self.window, query, argv)
         for date, sender, msg in result:
             yield '[{}] {} {}'.format(date, sender, msg)
 
