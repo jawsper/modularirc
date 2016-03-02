@@ -1,9 +1,136 @@
 from modules import Module
 import os
+import shlex
+import argparse
+
+import datetime
+from collections import OrderedDict
+
+class ZncLogReader:
+    OLD_PATH_FMT = '{}_{}_{:%Y%m%d}.log'
+    NEW_PATH_FMT = '{}/{}/{:%Y-%m-%d}.log'
+
+    def __init__(self, path):
+        self.log_dir = path
+
+    def get_all_logs(self):
+        networks = OrderedDict()
+        for filename in sorted(os.listdir(self.log_dir)):
+            fullname = os.path.join(self.log_dir, filename)
+            if os.path.isdir(fullname):
+                network = filename
+                if not network in networks:
+                    networks[network] = OrderedDict()
+                for windowname in sorted(os.listdir(fullname)):
+                    window = windowname
+                    if not window in networks[network]:
+                        networks[network][window] = []
+                    for datefile in sorted(os.listdir(os.path.join(fullname, window))):
+                        try:
+                            date = datetime.datetime.strptime(datefile, '%Y-%m-%d.log').date()
+                            networks[network][window].append(date)
+                        except ValueError:
+                            continue
+
+        return networks
+
+    def get_networks(self):
+        logs = self.get_all_logs()
+        return sorted(logs.keys())
+
+    def get_windows(self, network):
+        logs = self.get_all_logs()
+        if network in logs:
+            return sorted(logs[network].keys())
+        return []
+
+    def get_logs(self, network, window):
+        logs = self.get_all_logs()
+        if network in logs:
+            if window in logs[network]:
+                return sorted(logs[network][window])
+        return []
+
+    def get_log_file(self, network, window, date):
+        old_style = os.path.join(self.log_dir, ZncLogReader.OLD_PATH_FMT.format(network, window, date))
+        new_style = os.path.join(self.log_dir, ZncLogReader.NEW_PATH_FMT.format(network, window, date))
+
+        # print(old_style, new_style)
+
+        have_old = os.path.exists(old_style)
+        have_new = os.path.exists(new_style)
+        # print(have_old, have_new)
+
+        filename = None
+        if have_new:
+            filename = new_style
+        elif have_old:
+            filename = old_style
+
+        if filename is not None:
+            return [line.strip() for line in open(filename, 'r', encoding='latin-1').readlines()]
+        else:
+            print('wtf no file')
+        return []
+
+    def search_log(self, network, window, query, argv):
+        max_count = argv.line_count
+        print(max_count)
+        logs = self.get_all_logs()[network][window]
+        for log_date in reversed(logs):
+            for line in reversed(self.get_log_file(network, window, log_date)):
+                try:
+                    msg_time, msg_sender, msg = line.split(None, 2)
+                except ValueError:
+                    continue
+                msg_time = datetime.datetime.strptime(msg_time, '[%H:%M:%S]').time()
+                msg_datetime = datetime.datetime.combine(log_date, msg_time)
+                if argv.ignore_commands and msg[0] == '!':
+                    continue
+                if argv.case_insensitive:
+                    has = query in line.lower()
+                else:
+                    has = query in line
+                if has:
+                    yield msg_datetime, msg_sender, msg
+                    max_count -= 1
+                    if max_count == 0:
+                        return
+
 
 class logread(Module):
     logfile = os.path.join(os.path.dirname(__file__), '..', 'ircbot.log')
-    
+
+    def start(self):
+        try:
+            self.log_path = self.get_config('log_path')
+        except:
+            self.log_path = None
+
+    def admin_cmd_search_log(self, raw_args, **kwargs):
+        if not self.log_path:
+            return ['No log path set.']
+        argv = shlex.split(raw_args)
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-i', action='store_true', dest='case_insensitive')
+        parser.add_argument('-I', action='store_true', dest='ignore_commands')
+        parser.add_argument('-c', type=int, default=1, dest='line_count')
+        parser.add_argument('query', nargs='+')
+        try:
+            argv = parser.parse_args(argv)
+        except SystemExit:
+            return ['Error parsing arguments']
+
+        query = ' '.join(argv.query)
+        if argv.case_insensitive:
+            query = query.lower()
+        print(query)
+
+        log_reader = ZncLogReader(self.log_path)
+        result = log_reader.search_log('freenode', '#tkkrlab', query, argv)
+        for date, sender, msg in result:
+            yield '[{}] {} {}'.format(date, sender, msg)
+
     def admin_cmd_logread(self, arglist, **kwargs):
         return self.read_log(*arglist)
 
@@ -11,7 +138,7 @@ class logread(Module):
         try:
             count = int(count)
         except ValueError:
-            return ['Invalid count.']
+            return ['Invalid count']
         try:
             with open(self.logfile, 'rt') as f:
                 log = f.readlines()
