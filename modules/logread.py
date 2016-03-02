@@ -72,8 +72,12 @@ class ZncLogReader:
 
     def search_log(self, network, window, query, argv):
         max_count = argv.line_count
-        logs = self.get_all_logs()[network][window]
-        for log_date in reversed(logs):
+        logs = self.get_all_logs()
+        if not network in logs:
+            return
+        if not window in logs[network]:
+            return
+        for log_date in reversed(logs[network][window]):
             for line in reversed(self.get_log_file(network, window, log_date)):
                 try:
                     msg_time, msg_sender, msg = line.split(None, 2)
@@ -81,7 +85,7 @@ class ZncLogReader:
                     continue
                 msg_time = datetime.datetime.strptime(msg_time, '[%H:%M:%S]').time()
                 msg_datetime = datetime.datetime.combine(log_date, msg_time)
-                if argv.ignore_commands and msg[0] == '!':
+                if not argv.search_commands and msg[0] == '!':
                     continue
                 if argv.case_insensitive:
                     has = query in line.lower()
@@ -109,12 +113,12 @@ class logread(Module):
 
     def admin_cmd_search_log(self, raw_args, **kwargs):
         if not self.log_path:
-            yield 'No log path set.'
+            yield 'Module not configured correctly.'
             return
         argv = shlex.split(raw_args)
         parser = argparse.ArgumentParser()
         parser.add_argument('-i', action='store_true', dest='case_insensitive')
-        parser.add_argument('-I', action='store_true', dest='ignore_commands')
+        parser.add_argument('-C', action='store_true', dest='search_commands')
         parser.add_argument('-c', type=int, default=1, dest='line_count')
         parser.add_argument('query', nargs='+')
         try:
