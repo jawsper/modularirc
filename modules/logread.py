@@ -113,7 +113,8 @@ class logread(Module):
 
     def admin_cmd_search_log(self, raw_args, **kwargs):
         if not self.log_path:
-            return ['No log path set.']
+            yield 'No log path set.'
+            return
         argv = shlex.split(raw_args)
         parser = argparse.ArgumentParser()
         parser.add_argument('-i', action='store_true', dest='case_insensitive')
@@ -123,12 +124,12 @@ class logread(Module):
         try:
             argv = parser.parse_args(argv)
         except SystemExit:
-            return ['Error parsing arguments']
+            yield 'Error parsing arguments'
+            return
 
         query = ' '.join(argv.query)
         if argv.case_insensitive:
             query = query.lower()
-        print(query)
 
         log_reader = ZncLogReader(self.log_path)
         result = log_reader.search_log(self.network, self.window, query, argv)
