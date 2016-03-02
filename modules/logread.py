@@ -55,11 +55,8 @@ class ZncLogReader:
         old_style = os.path.join(self.log_dir, ZncLogReader.OLD_PATH_FMT.format(network, window, date))
         new_style = os.path.join(self.log_dir, ZncLogReader.NEW_PATH_FMT.format(network, window, date))
 
-        # print(old_style, new_style)
-
         have_old = os.path.exists(old_style)
         have_new = os.path.exists(new_style)
-        # print(have_old, have_new)
 
         filename = None
         if have_new:
@@ -70,12 +67,11 @@ class ZncLogReader:
         if filename is not None:
             return [line.strip() for line in open(filename, 'r', encoding='latin-1').readlines()]
         else:
-            print('wtf no file')
+            logging.warning('wtf no file')
         return []
 
     def search_log(self, network, window, query, argv):
         max_count = argv.line_count
-        print(max_count)
         logs = self.get_all_logs()[network][window]
         for log_date in reversed(logs):
             for line in reversed(self.get_log_file(network, window, log_date)):
