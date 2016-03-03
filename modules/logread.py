@@ -87,6 +87,9 @@ class ZncLogReader:
                 msg_datetime = datetime.datetime.combine(log_date, msg_time)
                 if not argv.search_commands and msg[0] == '!':
                     continue
+                if argv.nickname:
+                    if not msg_sender[1:-1].lower() == argv.nickname.lower():
+                        continue
                 if argv.case_insensitive:
                     has = query in line.lower()
                 else:
@@ -120,6 +123,7 @@ class logread(Module):
         parser.add_argument('-i', action='store_true', dest='case_insensitive')
         parser.add_argument('-C', action='store_true', dest='search_commands')
         parser.add_argument('-c', type=int, default=1, dest='line_count')
+        parser.add_argument('-n', '--nickname', dest='nickname')
         parser.add_argument('query', nargs='+')
         try:
             argv = parser.parse_args(argv)
