@@ -7,6 +7,8 @@ Written in Python 3
 Dependencies:
 + irc (https://pypi.python.org/pypi/irc)
 + python-dateutil (for module ns) (https://pypi.python.org/pypi/python-dateutil)
++ requests (for module url_scanner)
++ hurry.filesize (for module url_scanner)
 
 ======
 Config file ircbot.conf:
