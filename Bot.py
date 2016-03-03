@@ -14,13 +14,13 @@ import sqlite3
 import logging
 import json
 
-from ModuleManager import ModuleManager
+from modules import ModuleManager
 
 class BotRestartException(Exception):
     pass
 class BotReloadException(Exception):
     pass
-class BotExitException( Exception ):
+class BotExitException(Exception):
     pass
 
 class Bot(irc.bot.SingleServerIRCBot):
