@@ -3,14 +3,13 @@ import json
 
 class karma(Module):
     """karma: give or take karma. karma is given with !<something><operator> # <reason>. <operator> is ++ or --, reason is optional """
-    def __init__( self, mgr ):
-        super( karma, self ).__init__( mgr )
+    def start(self):
         try:
             self.karma = json.loads(self.get_config('karma'))
         except:
             self.karma = []
 
-    def __del__(self):
+    def stop(self):
         self.set_config('karma', json.dumps(self.karma))
     
     def on_privmsg( self, source, target, message ):
