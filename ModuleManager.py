@@ -40,8 +40,11 @@ class ModuleManager(object):
         return self.modules.keys()
 
     def get_loaded_modules(self):
-        """Get all loaded modules"""
+        return self.get_enabled_modules()
+    def get_enabled_modules(self):
+        """Get all enabled modules"""
         return self.loaded_modules.items()
+
 
     def module_is_loaded(self, module_name):
         return module_name in self.loaded_modules
@@ -87,7 +90,7 @@ class ModuleManager(object):
         if module_name in self.loaded_modules:
             return 'Module {} already enabled'.format(module_name)
         try:
-            self.loaded_modules[module_name] = self.modules[module_name ](self)
+            self.loaded_modules[module_name] = self.modules[module_name](self)
         except Exception as e:
             raise ModuleLoadException(e)
             return 'Module {} failed to load: {}'.format(module_name, e)
