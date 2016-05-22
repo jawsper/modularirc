@@ -192,7 +192,7 @@ class Bot(irc.bot.SingleServerIRCBot):
                     self.notice( source, ' - {0}: {1}'.format( chan, ' '.join( self.channel_ops[ chan ] ) ) )
                 return
 
-        if cmd == 'help':
+        if False and cmd == 'help':
             if len( arglist ) > 0:
                 if arglist[0] == 'module':
                     if len( arglist ) < 2:
@@ -210,7 +210,7 @@ class Bot(irc.bot.SingleServerIRCBot):
                     cmds = module.get_cmd_list()
                     self.notice( target, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) if len( cmds ) > 0 else 'No commands' ) )
 
-        elif admin and cmd == 'admin_help':
+        elif False and admin and cmd == 'admin_help':
             if len( arglist ) > 0:
                 for ( module_name, module ) in self.modules.get_loaded_modules():
                     if module.has_admin_cmd( arglist[0] ):
