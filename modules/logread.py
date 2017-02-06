@@ -124,7 +124,7 @@ class logread(Module):
         parser.add_argument('-C', action='store_true', dest='search_commands')
         parser.add_argument('-c', type=int, default=1, dest='line_count')
         parser.add_argument('-n', '--nickname', dest='nickname')
-        parser.add_argument('query', nargs='+')
+        parser.add_argument('query', nargs='*')
         try:
             argv = parser.parse_args(argv)
         except SystemExit:
