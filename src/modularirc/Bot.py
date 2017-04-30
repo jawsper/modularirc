@@ -14,14 +14,10 @@ import sqlite3
 import logging
 import json
 
-from modules import ModuleManager
+import modularirc
 
-class BotRestartException(Exception):
-    pass
-class BotReloadException(Exception):
-    pass
-class BotExitException(Exception):
-    pass
+from .module_manager import ModuleManager
+
 
 class Bot(irc.bot.SingleServerIRCBot):
     """The main brain of the IRC bot."""
@@ -33,18 +29,19 @@ class Bot(irc.bot.SingleServerIRCBot):
         self.last_msg = -1
         self.msg_flood_limit = 0.25
 
-        with open(os.path.join(os.path.dirname(__file__), 'ircbot.conf')) as f:
+        config_dir = os.getenv('XDG_CONFIG_HOME', os.path.expanduser('~/.config/'))
+        with open(os.path.join(config_dir, 'ircbot.conf')) as f:
             data = json.load(f)
             self.servers = data['servers']
 
         self.select_server(0)
 
-        self.db = sqlite3.connect( os.path.join( os.path.dirname( __file__ ), 'ircbot.sqlite3' ), check_same_thread = False )
+        self.db = sqlite3.connect(os.path.join(config_dir, 'ircbot.sqlite3'), check_same_thread=False)
         cursor = self.db.cursor()
         try:
-            cursor.execute( 'select * from config limit 1' )
+            cursor.execute('select * from config limit 1')
         except sqlite3.OperationalError: # table no exist
-            cursor.execute( 'create table config ( `group` varchar(100), `key` varchar(100), `value` varchar(100) NULL )' )
+            cursor.execute('create table config ( `group` varchar(100), `key` varchar(100), `value` varchar(100) NULL )')
         cursor.close()
         modules_blacklist = data.get('blacklist', None)
         self.modules = ModuleManager(self, modules_blacklist)
@@ -65,7 +62,7 @@ class Bot(irc.bot.SingleServerIRCBot):
         self.connection.set_rate_limit(30)
 
         for module_name in self.modules.get_available_modules():
-            self.modules.enable_module( module_name )
+            self.modules.enable_module(module_name)
 
     def select_server(self, index):
         self.current_server = self.servers[index]
@@ -73,12 +70,12 @@ class Bot(irc.bot.SingleServerIRCBot):
         self.admin = self.current_server['global_admins']
         self.admin_channels = self.current_server['admin_channels']
 
-    def start( self ):
-        logging.debug( 'start()' )
+    def start(self):
+        logging.debug('start()')
         super(Bot, self).start()
 
-    def die( self ):
-        logging.debug( 'die()' )
+    def die(self):
+        logging.debug('die()')
         self.modules.unload()
         self.connection.disconnect( 'Bye, cruel world!' )
         #super(Bot, self).die()
@@ -94,12 +91,15 @@ class Bot(irc.bot.SingleServerIRCBot):
                 break
             m.append(message[i:i + MAX_LINE_LEN])
         return m
+
     def notice( self, target, message ):
         for m in self.__process_message(message):
             self.connection.notice(target, m)
+
     def privmsg( self, target, message ):
         for m in self.__process_message(message):
             self.connection.privmsg(target, m)
+
     def action( self, target, message ):
         for m in self.__process_message(message):
             self.connection.action(target, m)
@@ -143,12 +143,12 @@ class Bot(irc.bot.SingleServerIRCBot):
         if admin:
             if cmd == 'die':
                 self.notice( source, 'Goodbye cruel world!' )
-                raise BotExitException
+                raise modularirc.BotExitException
             elif cmd == 'jump':
                 self.jump_server()
             elif cmd == 'restart_class':
                 self.notice(source, 'Restarting...')
-                raise BotReloadException
+                raise modularirc.BotReloadException
             # config commands
             elif cmd == 'get_config' and len( arglist ) <= 2:
                 if len( arglist ) == 2:
@@ -192,8 +192,8 @@ class Bot(irc.bot.SingleServerIRCBot):
                     self.notice( source, ' - {0}: {1}'.format( chan, ' '.join( self.channel_ops[ chan ] ) ) )
                 return
 
-        if False and cmd == 'help':
-            if len( arglist ) > 0:
+        if cmd == 'help':
+            if len(arglist) > 0:
                 if arglist[0] == 'module':
                     if len( arglist ) < 2:
                         pass
@@ -210,55 +210,55 @@ class Bot(irc.bot.SingleServerIRCBot):
                     cmds = module.get_cmd_list()
                     self.notice( target, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) if len( cmds ) > 0 else 'No commands' ) )
 
-        elif False and admin and cmd == 'admin_help':
-            if len( arglist ) > 0:
-                for ( module_name, module ) in self.modules.get_loaded_modules():
-                    if module.has_admin_cmd( arglist[0] ):
-                        self.notice( source, module.get_admin_cmd( arglist[0] ).__doc__ )
+        elif admin and cmd == 'admin_help':
+            if len(arglist) > 0:
+                for (module_name, module) in self.modules.get_loaded_modules():
+                    if module.has_admin_cmd(arglist[0]):
+                        self.notice(source, module.get_admin_cmd(arglist[0]).__doc__)
             else:
-                self.notice( source, '!admin_help: this help text (send !admin_help <command> for command help' )
-                self.notice( source, '!die:                                   kill the bot' )
-                self.notice( source, '!raw:                                   send raw irc command' )
-                self.notice( source, '!admins:                                see who are admin' )
-                self.notice( source, '!restart_class:                         restart the main Bot class' )
-                for ( module_name, module ) in self.modules.get_loaded_modules():
+                self.notice(source, '!admin_help: this help text (send !admin_help <command> for command help')
+                self.notice(source, '!die:                                   kill the bot')
+                self.notice(source, '!raw:                                   send raw irc command')
+                self.notice(source, '!admins:                                see who are admin')
+                self.notice(source, '!restart_class:                         restart the main Bot class')
+                for (module_name, module) in self.modules.get_loaded_modules():
                     cmds = module.get_admin_cmd_list()
-                    if len( cmds ) > 0:
-                        self.notice( source, ' * {0}: {1}'.format( module_name, ', '.join( cmds ) ) )
+                    if len(cmds) > 0:
+                        self.notice(source, ' * {0}: {1}'.format(module_name, ', '.join(cmds)))
         else:
-            for ( module_name, module ) in self.modules.get_loaded_modules():
+            for (module_name, module) in self.modules.get_loaded_modules():
                 try:
-                    if module.has_cmd( cmd ):
-                        lines = module.get_cmd( cmd )(args=arglist, arglist=arglist, raw_args=raw_args, source=source, target=target, admin=admin)
+                    if module.has_cmd(cmd):
+                        lines = module.get_cmd(cmd)(args=arglist, arglist=arglist, raw_args=raw_args, source=source, target=target, admin=admin)
                         if lines:
                             for line in lines:
-                                self.notice( target, line )
-                    elif admin and module.has_admin_cmd( cmd ):
+                                self.notice(target, line)
+                    elif admin and module.has_admin_cmd(cmd):
                         lines = module.get_admin_cmd(cmd)(args=arglist, arglist=arglist, raw_args=raw_args, source=source, target=target, admin=admin)
                         if lines:
                             for line in lines:
-                                self.notice( source, line )
+                                self.notice(source, line)
                 except Exception as e:
-                    logging.exception( "Module '{0}' handle error: {1}".format( module_name, e ) )
+                    logging.exception("Module '{0}' handle error: {1}".format(module_name, e))
 
     def on_privmsg(self, c, e):
         logging.debug("on_privmsg")
 
         source = e.source.nick
-        target = e.target if is_channel( e.target ) else source
+        target = e.target if is_channel(e.target) else source
         message = e.arguments[0]
 
         self.__module_handle('privmsg', source=source, target=target, message=message)
         try:
-            self.__process_command( c, e )
-        except BotExitException as e:
+            self.__process_command(c, e)
+        except modularirc.BotExitException as e:
             raise e
-        except BotReloadException as e:
+        except modularirc.BotReloadException as e:
             self.connection.disconnect( "Reloading bot..." )
             self.modules.unload()
             raise e
         except Exception as e:
-            logging.exception( 'Error in __process_command: %s', e )
+            logging.exception('Error in __process_command: %s', e)
 
     def on_pubmsg(self, c, e):
         logging.debug("on_pubmsg")
@@ -266,6 +266,7 @@ class Bot(irc.bot.SingleServerIRCBot):
 
     def on_pubnotice(self, c, e):
         self.on_notice( c, e )
+
     def on_privnotice(self, c, e):
         self.on_notice(c, e)
 
@@ -277,17 +278,19 @@ class Bot(irc.bot.SingleServerIRCBot):
         self.__module_handle('notice', source=source, target=target, message=message)
 
     def on_join(self, connection, event):
+        logging.info('on_join {}'.format(event.target))
         self.connection.names([event.target])
         self.__module_handle('join', connection=connection, event=event)
 
     def on_part(self, c, e):
+        logging.info('on_part {}'.format(e.target))
         self.connection.names([e.target])
 
     def on_kick(self, c, e):
         self.connection.names([e.target])
 
-    def on_mode( self, c, e ):
-        self.connection.names( [e.target] )
+    def on_mode(self, c, e):
+        self.connection.names([e.target])
 
     def on_endofnames(self, c, e):
         channel, text = e.arguments
@@ -298,7 +301,7 @@ class Bot(irc.bot.SingleServerIRCBot):
     # def on_nick(self, c, e):
     #     self.connection.names(self.channels.keys())
 
-    def on_nicknameinuse( self, c, e ):
+    def on_nicknameinuse(self, c, e):
         """Gets called if the server complains about the name being in use. Tries to set the nick to nick + '_'"""
         logging.debug( "on_nicknameinuse" )
         c.nick( c.get_nickname() + "_" )
@@ -308,40 +311,40 @@ class Bot(irc.bot.SingleServerIRCBot):
             connection.join( chan )
         self.__module_handle('welcome', connection=connection, event=event)
 
-    def get_config_groups( self ):
-        resultset = self.db.execute( 'select distinct `group` from config' )
-        return [ g for ( g, ) in resultset.fetchall() ]
+    def get_config_groups(self):
+        resultset = self.db.execute('select distinct `group` from config')
+        return [g for (g,) in resultset.fetchall()]
 
-    def get_config( self, group, key = None, default = None ):
+    def get_config(self, group, key=None, default=None):
         """gets a config value"""
-        logging.info( 'get config %s.%s', group, key )
+        logging.info('get config %s.%s', group, key)
         if key == None:
-            resultset = self.db.execute( 'select `key`, `value` from config where `group` = :group', { 'group': group } )
+            resultset = self.db.execute('select `key`, `value` from config where `group` = :group', {'group': group})
             values = {}
-            for ( key, value ) in resultset.fetchall():
-                values[ key ] = value
+            for (key, value) in resultset.fetchall():
+                values[key] = value
             return values
         else:
-            resultset = self.db.execute( 'select `value` from config where `group` = :group and `key` = :key', { 'group': group, 'key': key } )
+            resultset = self.db.execute('select `value` from config where `group` = :group and `key` = :key', {'group': group, 'key': key})
             value = resultset.fetchone()
-            if value == None:
-                if default != None:
+            if value is None:
+                if default is not None:
                     return default
                 raise Exception('Value not found')
             return value[0]
 
-    def set_config( self, group, key, value ):
+    def set_config(self, group, key, value):
         """sets a config value"""
-        logging.info( 'set config %s.%s to "%s"', group, key, value )
+        logging.info('set config %s.%s to "%s"', group, key, value)
         cursor = self.db.cursor()
-        data = { 'group': group, 'key': key, 'value': value }
+        data = {'group': group, 'key': key, 'value': value}
         if value == None:
-            cursor.execute( 'delete from config where `group` = :group and `key` = :key', data )
+            cursor.execute('delete from config where `group` = :group and `key` = :key', data)
         else:
             try:
-                self.get_config( group, key )
-                cursor.execute( 'update config set `value` = :value where `group` = :group and `key` = :key', data )
+                self.get_config(group, key)
+                cursor.execute('update config set `value` = :value where `group` = :group and `key` = :key', data)
             except:
-                cursor.execute( 'insert into config ( `group`, `key`, `value` ) values( :group, :key, :value )', data )
+                cursor.execute('insert into config ( `group`, `key`, `value` ) values( :group, :key, :value )', data)
         cursor.close()
         self.db.commit()

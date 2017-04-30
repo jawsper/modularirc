@@ -1,7 +1,9 @@
-from modules import Module
 import json
 
-class karma(Module):
+from modularirc import BaseModule
+
+
+class Module(BaseModule):
     """karma: give or take karma. karma is given with !<something><operator> # <reason>. <operator> is ++ or --, reason is optional """
     def start(self):
         try:

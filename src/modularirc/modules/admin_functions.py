@@ -1,6 +1,7 @@
-from modules import Module
+from modularirc import BaseModule
 
-class admin_functions(Module):
+
+class Module(BaseModule):
     """admin_functions: special functions for admins"""
     
     def __init__(self, mgr):

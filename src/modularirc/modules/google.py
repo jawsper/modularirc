@@ -2,9 +2,11 @@ import requests
 import logging
 import os, json, pickle, re
 import http.client, urllib.request, urllib.parse, urllib.error
-from modules import Module
 
-class google(Module):
+from modularirc import BaseModule
+
+
+class Module(BaseModule):
     """Bot module to search on google"""
     google_cache_file = os.path.join(os.path.dirname(__file__), '.google_cache')
 

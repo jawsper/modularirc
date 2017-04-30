@@ -1,8 +1,10 @@
-from modules import Module
 import os
 import subprocess
 
-class git(Module):
+from modularirc import BaseModule
+
+
+class Module(BaseModule):
     # handle update git
     def __get_base_path(self):
         return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

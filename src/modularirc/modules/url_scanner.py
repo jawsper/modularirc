@@ -1,10 +1,12 @@
-from modules import Module
 import re
 import logging
 from hurry.filesize import size as filesize
 import html.parser
 import threading
 import requests
+
+from modularirc import BaseModule
+
 
 class WorkerThread(threading.Thread):
     def __init__(self, module, source, target, url):
@@ -68,7 +70,7 @@ class WorkerThread(threading.Thread):
         self.module.notice(self.target, '{}: {}'.format(self.source, message))
 
 
-class url_scanner(Module):
+class Module(BaseModule):
     def on_privmsg(self, source, target, message):
         m = re.search(r'(https?://\S+)', message)
         if m:

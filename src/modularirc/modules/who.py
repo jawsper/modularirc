@@ -1,4 +1,4 @@
-from modules import Module
+from modularirc import BaseModule
 import json
 import urllib.request
 from datetime import datetime, timedelta
@@ -8,7 +8,7 @@ from collections import OrderedDict
 import time
 import logging
 
-class who(Module):
+class Module(BaseModule):
     """who: see who's here"""
     def __init__(self, mgr):
         super().__init__(mgr)

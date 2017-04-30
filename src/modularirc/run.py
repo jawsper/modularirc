@@ -1,24 +1,38 @@
-#!/usr/bin/env python3
-
 import os
 import sys
 import logging
 import select
 import time
 from imp import reload
-import Bot
+from . import Bot
 
+import modularirc
 
-pid_file = os.path.join(os.path.dirname(__file__), 'ircbot.pid')
-logging_file = os.path.join(os.path.dirname(__file__), 'ircbot.log')
+runtime_dir = os.getenv('XDG_RUNTIME_DIR', '/tmp')
+pid_file = os.path.join(runtime_dir, 'ircbot.pid')
+logging_file = os.path.join(runtime_dir, 'ircbot.log')
 logging_level = logging.INFO
 logging_format = '[%(asctime)s] %(levelname)s: %(message)s'
 
 
-def main(argv):
+def main():
+    argv = sys.argv[1:]
+
     if os.path.exists(pid_file):
-        print('PID file exists! If the bot is not running, please delete this file before trying to start again!')
-        sys.exit(1)
+        try:
+            pid = int(open(pid_file, 'rt').read())
+            os.kill(pid, 0)
+            print('PID file exists! If the bot is not running, please delete this file before trying to start again!')
+            sys.exit(1)
+        except ValueError:
+            print("Invalid PID file! Assuming it's invalid and deleting it.")
+            os.remove(pid_file)
+        except ProcessLookupError:
+            print("PID in PID file doesn't exist! Deleting PID file and continuing.")
+            os.remove(pid_file)
+        except:
+            print("Can't read PID file!")
+            sys.exit(1)
     fork = False
     if len(argv) > 0:
         if argv[0] == '-fork':
@@ -45,9 +59,9 @@ def main(argv):
         try:
             logging.info('Starting bot...')
             botje.start()
-        except Bot.BotRestartException:
+        except modularirc.BotRestartException:
             continue
-        except Bot.BotReloadException:
+        except modularirc.BotReloadException:
             logging.info('Force reloading Bot class')
             botje = None
             reload(Bot)
@@ -57,7 +71,7 @@ def main(argv):
         except select.error as e:
             logging.exception('select.error')
             continue
-        except (KeyboardInterrupt, Bot.BotExitException):
+        except (KeyboardInterrupt, modularirc.BotExitException):
             botje.die()
             break
         logging.warning('Botje died, restarting in 5...')
@@ -65,7 +79,3 @@ def main(argv):
     logging.info('Exiting bot...')
     if fork:
         os.remove(pid_file)
-
-
-if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))

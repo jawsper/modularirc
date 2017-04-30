@@ -1,6 +1,7 @@
-from modules import Module
+from modularirc import BaseModule
 
-class modules(Module):
+
+class Module(BaseModule):
     def __init__(self, mgr):
         super().__init__(mgr, admin_only=True)
 

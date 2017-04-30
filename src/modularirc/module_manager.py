@@ -3,21 +3,24 @@ import os
 import sys
 from imp import reload
 import logging
+import importlib
 
+MODULES_PATH = os.path.join(os.path.dirname(__file__), 'modules')
 
 def get_modules():
     """Returns all modules that are found in the current package.
     Excludes modules starting with '_'"""
 
-    return [name for _, name, _ in pkgutil.iter_modules([os.path.dirname(__file__)]) if name[0] != '_']
+    return [name for _, name, _ in pkgutil.iter_modules([MODULES_PATH]) if name[0] != '_']
 
 
 def get_module(module):
     """Import module <module> and return the class.
-    This returns the class modules.<module>.<module>"""
+    This returns the class modularirc.modules.<module>.<module>"""
 
-    mod = __import__('modules.{0}'.format(module), fromlist=[module])
-    return getattr(mod, module)
+    module_path = 'modularirc.modules.{}'.format(module)
+    module_name = 'Module'
+    return getattr(importlib.import_module(module_path), module_name)
 
 
 def reload_module(module):
@@ -38,16 +41,16 @@ def reload_module(module):
         return False
 
 
-class Module(object):
+class BaseModule(object):
     def __init__(self, manager, has_commands=True, admin_only=False):
         self.mgr = manager
         self.has_commands = has_commands
         self.admin_only = admin_only
-        logging.info('Module {0} __init__'.format(self.__class__.__name__))
+        logging.info('Module {0} __init__'.format(self.__module__.split('.')[-1]))
         self.start()
 
     def __del__(self):
-        logging.info('Module {0} __del__'.format(self.__class__.__name__))
+        logging.info('Module {0} __del__'.format(self.__module__.split('.')[-1]))
         self.stop()
 
     def start(self):
@@ -163,7 +166,7 @@ class ModuleManager(object):
             if module:
                 self.modules[module_name] = module
                 return 'Module added'
-        except Exception as e:
+        except AttributeError as e: #Exception as e:
             return 'Error loading module: {0}'.format(e)
         return 'Module not available'
 
@@ -185,7 +188,7 @@ class ModuleManager(object):
         try:
             self.loaded_modules[module_name] = self.modules[module_name](self)
         except Exception as e:
-            raise ModuleLoadException(e)
+            # raise ModuleLoadException(e)
             return 'Module {} failed to load: {}'.format(module_name, e)
         return 'Module {} enabled'.format(module_name)
 

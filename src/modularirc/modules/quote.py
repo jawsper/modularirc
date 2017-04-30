@@ -1,10 +1,12 @@
-from modules import Module
 import glob
 import os
 import logging
 import random
 
-class quote(Module):
+from modularirc import BaseModule
+
+
+class Module(BaseModule):
     def cmd_quote(self, **kwargs):
         """!quote: to get a random quote"""
         quote = self.random_quote()

@@ -1,11 +1,13 @@
-from modules import Module
 import logging
 import json
 
 from datetime import datetime
 from dateutil.tz import tzlocal
 
-class reminder(Module):
+from modularirc import BaseModule
+
+
+class Module(BaseModule):
     def start(self):
         try:
             self.reminders = json.loads(self.get_config('reminders'))

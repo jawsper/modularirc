@@ -1,7 +1,9 @@
-from modules import Module
 import json
 
-class event(Module):
+from modularirc import BaseModule
+
+
+class Module(BaseModule):
     """event: Create and join an event."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

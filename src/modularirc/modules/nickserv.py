@@ -1,6 +1,7 @@
-from modules import Module
+from modularirc import BaseModule
 
-class nickserv(Module):
+
+class Module(BaseModule):
 	"""nickserv: automatically auth with nickserv"""
 	def __init__(self, mgr):
 		super().__init__(mgr, admin_only=True)

@@ -1,10 +1,12 @@
-from modules import Module
 import os
 import shlex
 import argparse
 
 import datetime
 from collections import OrderedDict
+
+from modularirc import BaseModule
+
 
 class ZncLogReader:
     OLD_PATH_FMT = '{}_{}_{:%Y%m%d}.log'
@@ -101,7 +103,7 @@ class ZncLogReader:
                         return
 
 
-class logread(Module):
+class Module(BaseModule):
     logfile = os.path.join(os.path.dirname(__file__), '..', 'ircbot.log')
 
     def start(self):
