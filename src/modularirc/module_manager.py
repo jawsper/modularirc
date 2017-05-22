@@ -5,7 +5,7 @@ from imp import reload
 import logging
 import importlib
 
-MODULES_PATH = os.path.join(os.path.dirname(__file__), 'modules')
+MODULES_PATH = os.path.join(os.path.dirname(__file__), 'modules', 'basemodules')
 
 def get_modules():
     """Returns all modules that are found in the current package.
@@ -18,7 +18,7 @@ def get_module(module):
     """Import module <module> and return the class.
     This returns the class modularirc.modules.<module>.<module>"""
 
-    module_path = 'modularirc.modules.{}'.format(module)
+    module_path = 'modularirc.modules.basemodules.{}'.format(module)
     module_name = 'Module'
     return getattr(importlib.import_module(module_path), module_name)
 

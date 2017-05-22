@@ -1,0 +1,3 @@
+[submodule "src/modularirc/modules/basemodules"]
+	path = src/modularirc/modules/basemodules
+	url = https://github.com/jawsper/modularirc-basemodules.git
