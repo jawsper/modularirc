@@ -30,7 +30,9 @@ class Bot(irc.bot.SingleServerIRCBot):
         self.msg_flood_limit = 0.25
 
         config_dir = os.getenv('XDG_CONFIG_HOME', os.path.expanduser('~/.config/'))
-        with open(os.path.join(config_dir, 'ircbot.conf')) as f:
+        config_file = os.path.join(config_dir, 'ircbot.conf')
+        logging.info('Using config file "%s"', config_file)
+        with open(config_file) as f:
             data = json.load(f)
             self.servers = data['servers']
 
