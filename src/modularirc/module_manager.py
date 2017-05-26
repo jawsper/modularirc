@@ -5,23 +5,18 @@ from imp import reload
 import logging
 import importlib
 
-MODULES_PATH = os.path.join(os.path.dirname(__file__), 'modules', 'basemodules')
+from modularirc.modules import loader
 
 def get_modules():
     """Returns all modules that are found in the current package.
     Excludes modules starting with '_'"""
+    return [module_info.name for module_info in loader.list_modules()]
 
-    return [name for _, name, _ in pkgutil.iter_modules([MODULES_PATH]) if name[0] != '_']
-
-
-def get_module(module):
+def get_module(name):
     """Import module <module> and return the class.
-    This returns the class modularirc.modules.<module>.<module>"""
-
-    module_path = 'modularirc.modules.basemodules.{}'.format(module)
-    module_name = 'Module'
-    return getattr(importlib.import_module(module_path), module_name)
-
+    This returns the class object"""
+    module_info = {module_info.name: module_info for module_info in loader.list_modules()}[name]
+    return loader.load_module(module_info).Module
 
 def reload_module(module):
     """Reload a module given the module name.
@@ -39,70 +34,6 @@ def reload_module(module):
         return True
     except AttributeError:
         return False
-
-
-class BaseModule(object):
-    def __init__(self, manager, has_commands=True, admin_only=False):
-        self.mgr = manager
-        self.has_commands = has_commands
-        self.admin_only = admin_only
-        logging.info('Module {0} __init__'.format(self.__module__.split('.')[-1]))
-        self.start()
-
-    def __del__(self):
-        logging.info('Module {0} __del__'.format(self.__module__.split('.')[-1]))
-        self.stop()
-
-    def start(self):
-        pass
-
-    def stop(self):
-        pass
-
-    def get_cmd_list(self, prefix='cmd_'):
-        return ['!{0}'.format(cmd[len(prefix):]) for cmd in dir(self) if cmd.startswith(prefix)]
-
-    def has_cmd(self, cmd, prefix='cmd_'):
-        return hasattr(self, '{}{}'.format(prefix, cmd))
-
-    def get_cmd(self, cmd, prefix='cmd_'):
-        return getattr(self, '{}{}'.format(prefix, cmd))
-
-    def get_admin_cmd_list(self):
-        return self.get_cmd_list(prefix='admin_cmd_')
-
-    def has_admin_cmd(self, cmd):
-        return self.has_cmd(cmd, prefix='admin_cmd_')
-
-    def get_admin_cmd(self, cmd):
-        return self.get_cmd(cmd, prefix='admin_cmd_')
-
-    # methods that directly call the mgr
-
-    def notice(self, target, message):
-        self.mgr.notice(target, message)
-
-    def privmsg(self, target, message):
-        self.mgr.privmsg(target, message)
-
-    def get_config(self, key, default=None):
-        return self.mgr.get_config(self.__class__.__name__, key, default)
-
-    def set_config(self, key, value):
-        self.mgr.set_config(self.__class__.__name__, key, value)
-
-    def get_module(self, name):
-        return self.mgr.get_module(name)
-
-
-class ModuleLoadException(Exception):
-    def __init__(self, exception):
-        super().__init__()
-        self.exception = exception
-
-    def __str__(self):
-        return 'ModuleLoadException({})'.format(self.exception)
-
 
 class ModuleManager(object):
     def __init__(self, bot, blacklist=None):

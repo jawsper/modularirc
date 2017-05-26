@@ -1,7 +1,7 @@
 __author__ = 'Jasper Seidel <code@jawsper.nl>'
 __version__ = '0.1.0'
 
-from .module_manager import BaseModule
+from modularirc.modules.base import BaseModule
 
 
 class BotRestartException(Exception):
