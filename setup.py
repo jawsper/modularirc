@@ -7,7 +7,7 @@ sys.path.insert(0, 'src')
 from modularirc import __version__
 
 setup(
-    name='ModularIRCBot',
+    name='modularirc',
     version=__version__,
     author='Jasper Seidel',
     author_email='code@jawsper.nl',
@@ -19,6 +19,11 @@ setup(
     long_description=open('README.md').read(),
     install_requires=[
         'irc',
+    ],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3',
     ],
 
     entry_points={
