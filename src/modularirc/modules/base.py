@@ -5,11 +5,12 @@ class BaseModule(object):
         self.bot = manager.bot
         self.has_commands = has_commands
         self.admin_only = admin_only
-        logging.info('Module {0} __init__'.format(self.__module__.split('.')[-1]))
+        self.module_name = self.__module__.split('.')[-1]
+        logging.info('Module {0} __init__'.format(self.module_name))
         self.start()
 
     def __del__(self):
-        logging.info('Module {0} __del__'.format(self.__module__.split('.')[-1]))
+        logging.info('Module {0} __del__'.format(self.module_name))
         self.stop()
 
     def enable(self):
@@ -51,10 +52,10 @@ class BaseModule(object):
         self.bot.privmsg(target, message)
 
     def get_config(self, key, default=None):
-        return self.bot.get_config(self.__class__.__name__, key, default)
+        return self.bot.get_config(self.module_name, key, default)
 
     def set_config(self, key, value):
-        self.bot.set_config(self.__class__.__name__, key, value)
+        self.bot.set_config(self.module_name, key, value)
 
     def get_module(self, name):
         return self.bot.get_module(name)
