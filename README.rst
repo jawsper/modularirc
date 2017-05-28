@@ -12,7 +12,7 @@ Config file at ~/.config/ircbot.conf
 
 Example:
 
-::
+.. code:: json
 
 	{
 		"version": "1.0",
@@ -31,3 +31,5 @@ Example:
 			}
 		]
 	}
+
+Also have a look at `modularirc-basemodules <https://github.com/jawsper/modularirc-basemodules>`_ for some somewhat useful modules.
