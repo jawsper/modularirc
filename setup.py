@@ -16,7 +16,7 @@ setup(
     url='https://github.com/jawsper/modularirc',
     license='LICENSE.txt',
     description='A modular, extensible IRC bot.',
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     install_requires=[
         'irc',
     ],
